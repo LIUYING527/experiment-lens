@@ -87,35 +87,32 @@ Run the viewer syntax check from the `viewer` directory with `npm run check`.
 The first agent adapter observes Claude Code lifecycle and tool-use hooks. It sends metadata-only events to the local viewer: it does **not** forward prompt text, tool arguments, or tool output contents. It does record tool names, input key names, working directory, hook type, and output size metadata.
 
 1. Start Experiment Lens (`cd viewer; npm start`).
-2. Install the SDK package if you have not already (the hook adapter itself uses only Python's standard library):
-   ```powershell
-   python -m pip install -e ./sdk/python
-   ```
+2. Confirm Python is available in PowerShell (`python --version`). The hook adapter uses only Python's standard library.
 3. Open your Claude Code project settings file at `.claude/settings.local.json` (or the appropriate user-level Claude Code settings file) and add hook commands. Replace the example path with the actual absolute path to `integrations/claude-code/hook.py` on your computer. Merge this into your existing settings; do not overwrite other hooks.
 
    ```json
    {
      "hooks": {
        "SessionStart": [
-         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "SessionEnd": [
-         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "UserPromptSubmit": [
-         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "PreToolUse": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "PostToolUse": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "PostToolUseFailure": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ],
        "Stop": [
-         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
        ]
      }
    }
