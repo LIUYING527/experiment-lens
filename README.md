@@ -88,37 +88,15 @@ The first agent adapter observes Claude Code lifecycle and tool-use hooks. It se
 
 1. Start Experiment Lens (`cd viewer; npm start`).
 2. Confirm Python is available in PowerShell (`python --version`). The hook adapter uses only Python's standard library.
-3. Open your Claude Code project settings file at `.claude/settings.local.json` (or the appropriate user-level Claude Code settings file) and add hook commands. Replace the example path with the actual absolute path to `integrations/claude-code/hook.py` on your computer. Merge this into your existing settings; do not overwrite other hooks.
+3. Install hooks into the Claude Code project you want to observe. From the Experiment Lens repository root, run the installer and pass your target project directory:
 
-   ```json
-   {
-     "hooks": {
-       "SessionStart": [
-         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "SessionEnd": [
-         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "UserPromptSubmit": [
-         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "PreToolUse": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "PostToolUse": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "PostToolUseFailure": [
-         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ],
-       "Stop": [
-         { "hooks": [{ "type": "command", "command": "python D:\\bwork\\experiment-lens\\integrations\\claude-code\\hook.py" }] }
-       ]
-     }
-   }
+   ```powershell
+   python .\\integrations\\claude-code\\install_hooks.py --project "D:\\path\\to\\your\\project"
    ```
 
-   Claude Code hook payloads are read from stdin. To use a different local viewer endpoint, set `EXPERIMENT_LENS_URL` in the environment before launching Claude Code (default: `http://127.0.0.1:7337`).
+   Replace the project path with the directory where you run Claude Code. The installer merges hooks into `.claude/settings.local.json`, preserves unrelated settings, creates a one-time backup before editing an existing file, and avoids adding duplicate commands if rerun. Review the resulting settings before using it. It does not modify global Claude Code settings.
+
+   The hook adapter reads Claude Code's JSON payload from stdin. To use a different local viewer endpoint, set `EXPERIMENT_LENS_URL` before launching Claude Code (default: `http://127.0.0.1:7337`).
 
 4. Restart Claude Code in that project and use it normally. Hook events should appear in Experiment Lens under a session-based run. If the command fails, check the Claude Code hook diagnostics and verify that the viewer is running.
 
