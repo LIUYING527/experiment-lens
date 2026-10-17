@@ -4,6 +4,12 @@
   "description": "Local-first desktop viewer for agent workflows and experiments",
   "main": "main.js",
   "private": true,
-  "scripts": { "start": "electron ." },
-  "devDependencies": { "electron": "^32.0.0", "ws": "^8.18.0" }
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check main.js"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "ws": "^8.18.0"
+  }
 }
