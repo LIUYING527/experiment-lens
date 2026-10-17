@@ -1,0 +1,9 @@
+{
+  "name": "experiment-lens-viewer",
+  "version": "0.1.0",
+  "description": "Local-first desktop viewer for agent workflows and experiments",
+  "main": "main.js",
+  "private": true,
+  "scripts": { "start": "electron ." },
+  "devDependencies": { "electron": "^32.0.0" }
+}
