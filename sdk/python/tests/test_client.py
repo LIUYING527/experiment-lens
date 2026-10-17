@@ -62,7 +62,8 @@ class LensClientTests(unittest.TestCase):
     def test_fail_silently_can_be_disabled(self):
         lens = Lens(base_url="http://127.0.0.1:1", timeout=0.05, fail_silently=True)
         self.assertFalse(lens.metric("should_not_raise", 1))
-        strict = Lens(base_url="http://127.0.0.1:1", timeout=0.05, fail_silently=False)
+        strict = Lens(base_url=self.base_url, timeout=0.05, fail_silently=False)
+        strict.base_url = "http://127.0.0.1:1"
         with self.assertRaises(Exception):
             strict.metric("should_raise", 1)
 
