@@ -81,6 +81,52 @@ python -m unittest discover -s tests -v
 
 Run the viewer syntax check from the `viewer` directory with `npm run check`.
 
+
+## Claude Code integration (experimental)
+
+The first agent adapter observes Claude Code lifecycle and tool-use hooks. It sends metadata-only events to the local viewer: it does **not** forward prompt text, tool arguments, or tool output contents. It does record tool names, input key names, working directory, hook type, and output size metadata.
+
+1. Start Experiment Lens (`cd viewer; npm start`).
+2. Install the SDK package if you have not already (the hook adapter itself uses only Python's standard library):
+   ```powershell
+   python -m pip install -e ./sdk/python
+   ```
+3. Open your Claude Code project settings file at `.claude/settings.local.json` (or the appropriate user-level Claude Code settings file) and add hook commands. Replace the example path with the actual absolute path to `integrations/claude-code/hook.py` on your computer. Merge this into your existing settings; do not overwrite other hooks.
+
+   ```json
+   {
+     "hooks": {
+       "SessionStart": [
+         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "SessionEnd": [
+         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "UserPromptSubmit": [
+         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "PreToolUse": [
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "PostToolUse": [
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "PostToolUseFailure": [
+         { "matcher": ".*", "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ],
+       "Stop": [
+         { "hooks": [{ "type": "command", "command": "python D:\\\\bwork\\\\experiment-lens\\\\integrations\\\\claude-code\\\\hook.py" }] }
+       ]
+     }
+   }
+   ```
+
+   Claude Code hook payloads are read from stdin. To use a different local viewer endpoint, set `EXPERIMENT_LENS_URL` in the environment before launching Claude Code (default: `http://127.0.0.1:7337`).
+
+4. Restart Claude Code in that project and use it normally. Hook events should appear in Experiment Lens under a session-based run. If the command fails, check the Claude Code hook diagnostics and verify that the viewer is running.
+
+The adapter is experimental; hook event names and payloads can vary by Claude Code version. Its event mapping has unit tests, but should be validated against the installed Claude Code version before relying on it for important work.
+
 ## Current status and limitations
 
 This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The current viewer keeps events in memory, so history is lost when the app closes. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; persistence, replay, run comparison, richer media, and additional agent adapters are follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
