@@ -69,6 +69,18 @@ lens.end_run(status="completed")
 
 The SDK is intentionally dependency-free and fails silently by default if the viewer is not running; pass `fail_silently=False` to surface connection errors.
 
+## Development checks
+
+The repository includes a GitHub Actions workflow that runs Python SDK unit tests on Python 3.9, 3.11, and 3.12, compiles the demo, installs the viewer dependencies, and checks the viewer JavaScript syntax. Run the SDK tests locally with:
+
+```powershell
+python -m pip install -e ./sdk/python
+cd sdk/python
+python -m unittest discover -s tests -v
+```
+
+Run the viewer syntax check from the `viewer` directory with `npm run check`.
+
 ## Current status and limitations
 
 This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The current viewer keeps events in memory, so history is lost when the app closes. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; persistence, replay, run comparison, richer media, and additional agent adapters are follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
