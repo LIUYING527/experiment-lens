@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "experiment-lens"
 version = "0.1.0"
 description = "A lightweight Python SDK for streaming agent experiment events to Experiment Lens"
-readme = "../../README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Experiment Lens contributors" }]
