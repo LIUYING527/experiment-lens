@@ -31,7 +31,7 @@ class EventStore {
 
     const recent = events.slice(-this.maxEvents);
     if (events.length > recent.length || lines.length !== events.length) {
-      this._writeSnapshot(recent);
+      this._writeSnapshotSync(recent);
     }
     return recent;
   }
@@ -54,6 +54,12 @@ class EventStore {
 
   async flush() {
     await this.pending;
+  }
+
+  _writeSnapshotSync(events) {
+    fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
+    const content = events.map(event => JSON.stringify(event)).join('\n');
+    fs.writeFileSync(this.filePath, content ? content + '\n' : '', 'utf8');
   }
 
   async _writeSnapshot(events) {
