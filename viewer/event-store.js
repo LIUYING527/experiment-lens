@@ -1,6 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
+function sanitizeEvent(event) {
+  const copy = JSON.parse(JSON.stringify(event));
+  if (copy.data && typeof copy.data === 'object' && typeof copy.data.data_url === 'string') {
+    delete copy.data.data_url;
+    copy.data.payload_omitted = true;
+  }
+  return copy;
+}
+
 class EventStore {
   constructor(filePath, maxEvents = 3000, compactEvery = 100) {
     this.filePath = filePath;
@@ -37,7 +46,7 @@ class EventStore {
   }
 
   append(event, currentEvents) {
-    const line = JSON.stringify(event) + '\n';
+    const line = JSON.stringify(sanitizeEvent(event)) + '\n';
     this.pending = this.pending.then(async () => {
       await fs.promises.mkdir(path.dirname(this.filePath), { recursive: true });
       await fs.promises.appendFile(this.filePath, line, 'utf8');
@@ -58,7 +67,7 @@ class EventStore {
 
   _writeSnapshotSync(events) {
     fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
-    const content = events.map(event => JSON.stringify(event)).join('\n');
+    const content = events.map(event => JSON.stringify(sanitizeEvent(event))).join('\n');
     fs.writeFileSync(this.filePath, content ? content + '\n' : '', 'utf8');
   }
 
@@ -71,4 +80,4 @@ class EventStore {
   }
 }
 
-module.exports = { EventStore };
+module.exports = { EventStore, sanitizeEvent };
