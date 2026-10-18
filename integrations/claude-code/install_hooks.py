@@ -23,6 +23,9 @@ HOOK_EVENTS = {
     "PreToolUse": True,
     "PostToolUse": True,
     "PostToolUseFailure": True,
+    "Notification": False,
+    "SubagentStart": False,
+    "SubagentStop": False,
     "Stop": False,
 }
 
