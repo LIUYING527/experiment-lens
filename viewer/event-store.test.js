@@ -79,3 +79,23 @@ test('does not persist large image data URLs in history', async () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('migrates older persisted image payloads when loading history', () => {
+  const { dir, file } = tempFile();
+  try {
+    fs.writeFileSync(file, JSON.stringify({
+      type: 'image',
+      run_id: 'legacy',
+      data: { name: 'old-frame.png', data_url: 'data:image/png;base64,OLD_PAYLOAD' }
+    }) + '\n');
+    const store = new EventStore(file);
+    const [loaded] = store.load();
+    assert.equal(loaded.data.name, 'old-frame.png');
+    assert.equal(loaded.data.payload_omitted, true);
+    assert.equal(Object.hasOwn(loaded.data, 'data_url'), false);
+    const persisted = JSON.parse(fs.readFileSync(file, 'utf8').trim());
+    assert.equal(Object.hasOwn(persisted.data, 'data_url'), false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
