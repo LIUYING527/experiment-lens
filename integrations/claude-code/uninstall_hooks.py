@@ -67,9 +67,8 @@ def uninstall(project: Path, hook_path: Path) -> Path:
         else:
             hooks[event_name] = entries
 
-    if not hooks:
+    if not hooks and changed:
         settings.pop("hooks", None)
-        changed = True
 
     if changed:
         backup = settings_path.with_suffix(settings_path.suffix + ".experiment-lens-uninstall.bak")
