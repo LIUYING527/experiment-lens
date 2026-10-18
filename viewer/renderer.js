@@ -43,7 +43,12 @@ function rebuildRuns() {
 }
 function ingest(e, shouldRender = true) {
   if (!e || typeof e.type !== 'string') return;
-  allEvents.push(e);
+  const historyEvent = JSON.parse(JSON.stringify(e));
+  if (historyEvent.data && typeof historyEvent.data === 'object' && typeof historyEvent.data.data_url === 'string') {
+    delete historyEvent.data.data_url;
+    historyEvent.data.payload_omitted = true;
+  }
+  allEvents.push(historyEvent);
   if (allEvents.length > MAX_EVENTS) allEvents.shift();
   if (e.type === 'trajectory' && Array.isArray(e.data?.points)) {
     points = e.data.points.map(p => Array.isArray(p) ? p : [p.x ?? 0, p.y ?? 0]);
