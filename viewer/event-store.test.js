@@ -50,14 +50,14 @@ test('compacts the log to the current in-memory event window', async () => {
   try {
     const store = new EventStore(file, 3, 2);
     let events = [];
-    for (let n = 1; n <= 5; n += 1) {
+    for (let n = 1; n <= 6; n += 1) {
       events.push({ type: 'step', n });
       if (events.length > 3) events.shift();
       await store.append(events[events.length - 1], events);
     }
     await store.flush();
     const persisted = fs.readFileSync(file, 'utf8').trim().split('\n').map(JSON.parse);
-    assert.deepEqual(persisted, [{ type: 'step', n: 3 }, { type: 'step', n: 4 }, { type: 'step', n: 5 }]);
+    assert.deepEqual(persisted, [{ type: 'step', n: 4 }, { type: 'step', n: 5 }, { type: 'step', n: 6 }]);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
