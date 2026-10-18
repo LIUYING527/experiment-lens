@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check event-store.js && node --check renderer.js",
-    "test": "node --test event-store.test.js"
+    "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js",
+    "test": "node --test event-store.test.js security.test.js"
   },
   "devDependencies": {
     "electron": "^32.0.0",
