@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check event-store.js",
+    "check": "node --check main.js && node --check event-store.js && node --check renderer.js",
     "test": "node --test event-store.test.js"
   },
   "devDependencies": {
