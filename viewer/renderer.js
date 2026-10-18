@@ -48,7 +48,7 @@ function ingest(e, shouldRender = true) {
   if (e.type === 'trajectory' && Array.isArray(e.data?.points)) {
     points = e.data.points.map(p => Array.isArray(p) ? p : [p.x ?? 0, p.y ?? 0]);
   }
-  if (e.type === 'image' && e.data?.data_url) lastImage = e.data;
+  if (e.type === 'image' && e.data?.data_url) lastImage = e.data;\n  else if (e.type === 'image' && e.data?.payload_omitted) lastImage = { name: e.data.name || 'Image artifact', payload_omitted: true };
   if (shouldRender) { rebuildRuns(); render(); }
 }
 function render() {
@@ -80,7 +80,7 @@ function render() {
     const detail=[d.hook,d.notification_type,d.status].filter(Boolean).join(' · ');
     return '<div class="agent-row"><div class="agent-name">' + esc(label) + '</div><div class="sub">' + esc(e.run_name || d.cwd || 'Agent') + (detail ? ' · ' + esc(detail) : '') + '</div></div>';
   }).join('') || 'No agent events yet. Connect Claude Code to see tool activity.';
-  if (lastImage) { $('preview').src = lastImage.data_url; $('imageName').textContent = lastImage.name || 'Image artifact'; }
+  if (lastImage) { if (lastImage.data_url) $('preview').src = lastImage.data_url; $('imageName').textContent = lastImage.payload_omitted ? (lastImage.name + ' · image data not stored in history') : (lastImage.name || 'Image artifact'); }
   drawTrajectory();
   if (selectedRunId && runs.has(selectedRunId)) {
     const latest = runs.get(selectedRunId);
@@ -153,6 +153,18 @@ function drawTrajectory() {
   points.forEach((p,i)=>{ctx.fillStyle=i===points.length-1?'#60e0b0':'#a8b4ff';ctx.beginPath();ctx.arc(px(Number(p[0])||0),py(Number(p[1])||0),i===points.length-1?5:3,0,Math.PI*2);ctx.fill();});
   $('trajectoryCount').textContent=points.length+' points';
 }
+function exportHistory() {
+  const payload = JSON.stringify({ exported_at: new Date().toISOString(), event_count: allEvents.length, events: allEvents }, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'experiment-lens-history-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 function connect() {
   const ws=new WebSocket('ws://127.0.0.1:7337/stream');
   ws.onopen=()=>{$('connection').textContent='● Connected';$('connection').style.color='#58d6a2';connected=true;};
@@ -169,7 +181,7 @@ function connect() {
     } catch(err) { console.error('Experiment Lens could not process an event:',err); }
   };
 }
-$('eventSearch').addEventListener('input',render);
+$('eventSearch').addEventListener('input',render);\n$('exportEvents').addEventListener('click',exportHistory);
 $('runSearch').addEventListener('input',render);
 $('replayPrev').addEventListener('click',()=>stepReplay(-1));
 $('replayNext').addEventListener('click',()=>stepReplay(1));
