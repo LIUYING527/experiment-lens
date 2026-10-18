@@ -3,7 +3,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { EventStore } = require('./event-store');
+const { EventStore, sanitizeEvent } = require('./event-store');
 const { isTrustedLocalOrigin } = require('./security');
 
 const HOST = '127.0.0.1';
@@ -15,7 +15,7 @@ let eventStore;
 let quitAfterFlush = false;
 
 function sendEvent(event) {
-  events.push(event);
+  events.push(sanitizeEvent(event));
   if (events.length > 3000) events.shift();
   if (eventStore) eventStore.append(event, events);
   if (wss) for (const client of wss.clients) if (client.readyState === 1) client.send(JSON.stringify({ kind: 'event', event }));
@@ -40,7 +40,7 @@ function startServer() {
       let body = '';
       req.on('data', chunk => { body += chunk; if (body.length > 20 * 1024 * 1024) req.destroy(); });
       req.on('end', () => {
-        try { const event = JSON.parse(body); if (!event.type) throw new Error('event.type is required'); sendEvent(event); res.writeHead(202, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
+        try { const event = JSON.parse(body); if (typeof event.type !== 'string' || !event.type.trim()) throw new Error('event.type must be a non-empty string'); sendEvent(event); res.writeHead(202, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
         catch (error) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: error.message })); }
       });
       return;
