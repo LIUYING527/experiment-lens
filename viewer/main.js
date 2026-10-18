@@ -29,9 +29,8 @@ function startServer() {
     console.error('Experiment Lens could not load local history:', error.message);
   }
   const server = http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    const origin = req.headers.origin;
+    if (origin && origin !== 'file://') { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end('{\"error\":\"Cross-origin requests are not allowed\"}'); }
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     if (req.method === 'GET' && req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ ok: true, events: events.length })); }
     if (req.method === 'GET' && req.url === '/events') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(events)); }
@@ -48,7 +47,8 @@ function startServer() {
   });
   wss = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
-    if (req.url !== '/stream') return socket.destroy();
+    const origin = req.headers.origin;
+    if ((origin && origin !== 'file://') || req.url !== '/stream') return socket.destroy();
     wss.handleUpgrade(req, socket, head, ws => {
       wss.emit('connection', ws, req);
       ws.send(JSON.stringify({ kind: 'snapshot', events }));
