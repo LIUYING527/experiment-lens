@@ -37,7 +37,7 @@ npm install
 npm start
 ```
 
-The viewer opens a desktop window and listens locally at `http://127.0.0.1:7337`. The server binds to `127.0.0.1` rather than a public network interface. Recent events are stored as JSON Lines in Electron's app-specific user-data directory and restored on the next launch; the viewer keeps at most 3,000 events in its active history.
+The viewer opens a desktop window and listens locally at `http://127.0.0.1:7337`. The server binds to `127.0.0.1` rather than a public network interface and rejects requests carrying non-local browser origins. The dashboard applies a restrictive Content Security Policy. Recent events are stored as JSON Lines in Electron's app-specific user-data directory and restored on the next launch; the viewer keeps at most 3,000 events in its active history.
 
 ### 2. Install the Python SDK
 
