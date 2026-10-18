@@ -2,6 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const { EventStore } = require('./event-store');
 const { isTrustedLocalOrigin } = require('./security');
 
@@ -60,8 +61,13 @@ function startServer() {
 }
 
 function createWindow() {
-  windowRef = new BrowserWindow({ width: 1440, height: 920, minWidth: 980, minHeight: 680, backgroundColor: '#080b12', title: 'Experiment Lens', webPreferences: { contextIsolation: true, nodeIntegration: false } });
-  windowRef.loadFile(path.join(__dirname, 'index.html'));
+  windowRef = new BrowserWindow({ width: 1440, height: 920, minWidth: 980, minHeight: 680, backgroundColor: '#080b12', title: 'Experiment Lens', webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  const dashboardUrl = pathToFileURL(path.join(__dirname, 'index.html')).href;
+  windowRef.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  windowRef.webContents.on('will-navigate', (event, url) => {
+    if (url !== dashboardUrl) event.preventDefault();
+  });
+  windowRef.loadURL(dashboardUrl);
 }
 
 app.whenReady().then(() => { startServer(); createWindow(); app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); }); });
