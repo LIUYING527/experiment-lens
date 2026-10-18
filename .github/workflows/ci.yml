@@ -40,3 +40,6 @@ jobs:
       - name: Check JavaScript syntax
         working-directory: viewer
         run: npm run check
+      - name: Test event persistence
+        working-directory: viewer
+        run: npm test
