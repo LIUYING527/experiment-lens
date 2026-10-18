@@ -105,7 +105,7 @@ The adapter is experimental; hook event names and payloads can vary by Claude Co
 
 ## Current status and limitations
 
-This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The viewer persists recent events locally and restores up to 3,000 events after restart. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; replay, run comparison, richer media, and additional agent adapters are follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
+This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The viewer persists recent events locally and restores up to 3,000 events after restart. Run History groups events by run ID, supports text filtering, and lets you step or play through recorded events. Replay is a read-only inspection of recorded event metadata, not a rerun of the agent. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; run comparison, richer media, and additional agent adapters remain follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
 
 ## Contributing
 
