@@ -2,20 +2,31 @@ const { app, BrowserWindow } = require('electron');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
+const { EventStore } = require('./event-store');
 
 const HOST = '127.0.0.1';
 const PORT = 7337;
 const events = [];
 let windowRef;
 let wss;
+let eventStore;
 
 function sendEvent(event) {
   events.push(event);
   if (events.length > 3000) events.shift();
+  if (eventStore) eventStore.append(event, events);
   if (wss) for (const client of wss.clients) if (client.readyState === 1) client.send(JSON.stringify({ kind: 'event', event }));
 }
 
 function startServer() {
+  const historyPath = path.join(app.getPath('userData'), 'events.jsonl');
+  eventStore = new EventStore(historyPath, 3000);
+  try {
+    events.push(...eventStore.load());
+    console.log(`Restored ${events.length} events from local history`);
+  } catch (error) {
+    console.error('Experiment Lens could not load local history:', error.message);
+  }
   const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
