@@ -39,7 +39,8 @@ class EventStore {
     }
 
     const recent = events.slice(-this.maxEvents);
-    if (events.length > recent.length || lines.length !== events.length) {
+    const hasLegacyImagePayloads = events.some(event => event.data && typeof event.data.data_url === 'string');
+    if (events.length > recent.length || lines.length !== events.length || hasLegacyImagePayloads) {
       this._writeSnapshotSync(recent);
     }
     return recent;
