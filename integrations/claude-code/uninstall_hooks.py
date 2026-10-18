@@ -61,9 +61,11 @@ def uninstall(project: Path, hook_path: Path) -> Path:
                 kept_entries.append(entry)
         if kept_entries:
             hooks[event_name] = kept_entries
-        else:
+        elif entries:
             hooks.pop(event_name, None)
             changed = True
+        else:
+            hooks[event_name] = entries
 
     if not hooks:
         settings.pop("hooks", None)
