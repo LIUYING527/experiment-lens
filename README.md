@@ -80,7 +80,7 @@ cd sdk/python
 python -m unittest discover -s tests -v
 ```
 
-Run the viewer syntax check from the `viewer` directory with `npm run check`, and its event-store tests with `npm test`.
+Run the viewer syntax check from the `viewer` directory with `npm run check`, and its event-store/security tests with `npm test`. Build a Windows x64 installer locally with `npm run dist:win` (requires `npm install` first). The Windows Installer workflow also runs on demand from GitHub Actions and on version tags.
 
 
 ## Claude Code integration (experimental)
