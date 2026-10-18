@@ -7,10 +7,47 @@
   "scripts": {
     "start": "electron .",
     "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js",
-    "test": "node --test event-store.test.js security.test.js"
+    "test": "node --test event-store.test.js security.test.js",
+    "dist:win": "electron-builder --win nsis --x64"
   },
   "devDependencies": {
     "electron": "^44.9.0",
+    "electron-builder": "^26.17.0"
+  },
+  "dependencies": {
     "ws": "^8.18.0"
+  },
+  "build": {
+    "appId": "io.experimentlens.desktop",
+    "productName": "Experiment Lens",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "renderer.js",
+      "event-store.js",
+      "security.js",
+      "package.json",
+      "node_modules/ws/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Experiment-Lens-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
