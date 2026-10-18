@@ -74,7 +74,7 @@ class EventStore {
   async _writeSnapshot(events) {
     await fs.promises.mkdir(path.dirname(this.filePath), { recursive: true });
     const tempPath = this.filePath + '.tmp';
-    const content = events.map(event => JSON.stringify(event)).join('\n');
+    const content = events.map(event => JSON.stringify(sanitizeEvent(event))).join('\n');
     await fs.promises.writeFile(tempPath, content ? content + '\n' : '', 'utf8');
     await fs.promises.rename(tempPath, this.filePath);
   }
