@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
@@ -57,7 +57,16 @@ function startServer() {
     });
   });
   server.listen(PORT, HOST, () => console.log(`Experiment Lens event server listening on http://${HOST}:${PORT}`));
-  server.on('error', err => console.error('Experiment Lens server error:', err.message));
+  server.on('error', err => {
+    console.error('Experiment Lens server error:', err.message);
+    if (err.code === 'EADDRINUSE') {
+      dialog.showErrorBox(
+        'Experiment Lens cannot start its local service',
+        'Port 7337 is already in use. Close the other application using this port, then restart Experiment Lens.'
+      );
+      app.quit();
+    }
+  });
 }
 
 function createWindow() {
