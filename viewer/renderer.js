@@ -48,7 +48,8 @@ function ingest(e, shouldRender = true) {
   if (e.type === 'trajectory' && Array.isArray(e.data?.points)) {
     points = e.data.points.map(p => Array.isArray(p) ? p : [p.x ?? 0, p.y ?? 0]);
   }
-  if (e.type === 'image' && e.data?.data_url) lastImage = e.data;\n  else if (e.type === 'image' && e.data?.payload_omitted) lastImage = { name: e.data.name || 'Image artifact', payload_omitted: true };
+  if (e.type === 'image' && e.data?.data_url) lastImage = e.data;
+  else if (e.type === 'image' && e.data?.payload_omitted) lastImage = { name: e.data.name || 'Image artifact', payload_omitted: true };
   if (shouldRender) { rebuildRuns(); render(); }
 }
 function render() {
@@ -181,7 +182,8 @@ function connect() {
     } catch(err) { console.error('Experiment Lens could not process an event:',err); }
   };
 }
-$('eventSearch').addEventListener('input',render);\n$('exportEvents').addEventListener('click',exportHistory);
+$('eventSearch').addEventListener('input',render);
+$('exportEvents').addEventListener('click',exportHistory);
 $('runSearch').addEventListener('input',render);
 $('replayPrev').addEventListener('click',()=>stepReplay(-1));
 $('replayNext').addEventListener('click',()=>stepReplay(1));
