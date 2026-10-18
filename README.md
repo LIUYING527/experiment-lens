@@ -107,6 +107,11 @@ The adapter is experimental; hook event names and payloads can vary by Claude Co
 
 This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The viewer persists recent events locally and restores up to 3,000 events after restart. Large image `data_url` payloads are intentionally omitted from persisted history (the live preview still works while the event is streaming) to keep local storage bounded. Run History groups events by run ID, supports text filtering, lets you step or play through recorded events, and compares two runs side by side using event counts, duration, tool activity, error-like events, and metric counts. You can export the current local event history as JSON for debugging or sharing a reproducible report. Replay is a read-only inspection of recorded event metadata, not a rerun of the agent. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; run comparison, richer media, and additional agent adapters remain follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
 
+## Project docs
+
+- [Architecture and event contract](docs/ARCHITECTURE.md)
+- [1.0 release readiness checklist](docs/RELEASE_CHECKLIST.md)
+
 ## Contributing
 
 Issues and pull requests are welcome. Please include reproduction steps and your environment details when reporting bugs.
