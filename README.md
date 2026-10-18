@@ -11,6 +11,7 @@ Experiment Lens is a Windows-first, local-first desktop viewer for observing lon
 - Image artifacts sent as data URLs
 - Optional 2D trajectory points
 - Local HTTP event endpoint and WebSocket stream
+- Persistent local event history (restores the latest 3,000 events after restart)
 
 ## Architecture
 
@@ -36,7 +37,7 @@ npm install
 npm start
 ```
 
-The viewer opens a desktop window and listens locally at `http://127.0.0.1:7337`. The server binds to `127.0.0.1` rather than a public network interface.
+The viewer opens a desktop window and listens locally at `http://127.0.0.1:7337`. The server binds to `127.0.0.1` rather than a public network interface. Recent events are stored as JSON Lines in Electron's app-specific user-data directory and restored on the next launch; the viewer keeps at most 3,000 events in its active history.
 
 ### 2. Install the Python SDK
 
@@ -79,7 +80,7 @@ cd sdk/python
 python -m unittest discover -s tests -v
 ```
 
-Run the viewer syntax check from the `viewer` directory with `npm run check`.
+Run the viewer syntax check from the `viewer` directory with `npm run check`, and its event-store tests with `npm test`.
 
 
 ## Claude Code integration (experimental)
@@ -104,7 +105,7 @@ The adapter is experimental; hook event names and payloads can vary by Claude Co
 
 ## Current status and limitations
 
-This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The current viewer keeps events in memory, so history is lost when the app closes. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; persistence, replay, run comparison, richer media, and additional agent adapters are follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
+This is an early MVP, not a production release. The first milestone is a working end-to-end loop from emitted events to a live desktop dashboard. The viewer persists recent events locally and restores up to 3,000 events after restart. The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`; replay, run comparison, richer media, and additional agent adapters are follow-up work. End-to-end behavior still needs to be tested on a clean Windows machine.
 
 ## Contributing
 
