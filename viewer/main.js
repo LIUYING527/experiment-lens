@@ -30,7 +30,7 @@ function startServer() {
   }
   const server = http.createServer((req, res) => {
     const origin = req.headers.origin;
-    if (origin && origin !== 'file://') { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end('{\"error\":\"Cross-origin requests are not allowed\"}'); }
+    if (origin && origin !== 'file://' && origin !== 'null') { res.writeHead(403, { 'Content-Type': 'application/json' }); return res.end('{\"error\":\"Cross-origin requests are not allowed\"}'); }
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     if (req.method === 'GET' && req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ ok: true, events: events.length })); }
     if (req.method === 'GET' && req.url === '/events') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(events)); }
@@ -48,7 +48,7 @@ function startServer() {
   wss = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
     const origin = req.headers.origin;
-    if ((origin && origin !== 'file://') || req.url !== '/stream') return socket.destroy();
+    if ((origin && origin !== 'file://' && origin !== 'null') || req.url !== '/stream') return socket.destroy();
     wss.handleUpgrade(req, socket, head, ws => {
       wss.emit('connection', ws, req);
       ws.send(JSON.stringify({ kind: 'snapshot', events }));
