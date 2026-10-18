@@ -34,7 +34,7 @@ Electron Desktop Viewer
 
 ## Quick start
 
-You need Node.js 18+ and Python 3.9+.
+You need Node.js 22+ and Python 3.9+. The Windows installer workflow uses Node.js 22.
 
 ### 1. Start the desktop viewer
 
