@@ -6,6 +6,7 @@ let runs = new Map();
 let points = [];
 let lastImage = null;
 let selectedRunId = null;
+let compareSelection = new Set();
 let replayEvents = [];
 let replayIndex = 0;
 let replayTimer = null;
@@ -71,12 +72,22 @@ function render() {
   const runQuery = ($('runSearch')?.value || '').toLowerCase().trim();
   const visibleRuns = [...runs.values()].reverse().filter(r => (r.name + ' ' + r.id + ' ' + r.status).toLowerCase().includes(runQuery));
   $('historyCount').textContent = runs.size + ' runs';
+  for (const id of [...compareSelection]) if (!runs.has(id)) compareSelection.delete(id);
   $('runHistory').innerHTML = visibleRuns.map(r => {
     const dt = eventTime({ts:r.lastTs});
     const dot = r.status === 'failed' ? 'failed' : r.status === 'running' ? 'running' : '';
-    return '<button class="run-item ' + (r.id === selectedRunId ? 'selected' : '') + '" data-run-id="' + esc(r.id) + '"><div class="run-title"><span class="status-dot ' + dot + '"></span>' + esc(r.name) + '</div><div class="run-meta">' + esc(r.status) + ' · ' + r.events.length + ' events<br>' + esc(dt ? dt.toLocaleString() : 'timestamp unavailable') + '</div></button>';
+    return '<div class="run-item ' + (r.id === selectedRunId ? 'selected' : '') + '"><button class="run-select" data-run-id="' + esc(r.id) + '"><div class="run-title"><span class="status-dot ' + dot + '"></span>' + esc(r.name) + '</div><div class="run-meta">' + esc(r.status) + ' · ' + r.events.length + ' events<br>' + esc(dt ? dt.toLocaleString() : 'timestamp unavailable') + '</div></button><label class="compare-check"><input type="checkbox" data-compare-id="' + esc(r.id) + '"' + (compareSelection.has(r.id) ? ' checked' : '') + '>Compare</label></div>';
   }).join('') || '<div class="empty">No matching runs.</div>';
   $('runHistory').querySelectorAll('[data-run-id]').forEach(btn => btn.addEventListener('click', () => selectRun(btn.dataset.runId)));
+  $('runHistory').querySelectorAll('[data-compare-id]').forEach(input => input.addEventListener('change', () => {
+    const id = input.dataset.compareId;
+    if (input.checked) {
+      if (compareSelection.size >= 2) { input.checked = false; return; }
+      compareSelection.add(id);
+    } else compareSelection.delete(id);
+    $('compareRuns').disabled = compareSelection.size !== 2;
+  }));
+  $('compareRuns').disabled = compareSelection.size !== 2;
   $('runDetails').innerHTML = [...runs.values()].reverse().slice(0,8).map(r =>
     '<div style="padding:9px 0;border-bottom:1px solid #202738"><div style="color:#dce5f6">' + esc(r.name) + '</div><div class="sub">' + esc(r.id) + ' · ' + esc(r.status) + ' · ' + r.events.length + ' events</div></div>'
   ).join('') || 'No runs detected yet.';
@@ -159,6 +170,26 @@ function drawTrajectory() {
   points.forEach((p,i)=>{ctx.fillStyle=i===points.length-1?'#60e0b0':'#a8b4ff';ctx.beginPath();ctx.arc(px(Number(p[0])||0),py(Number(p[1])||0),i===points.length-1?5:3,0,Math.PI*2);ctx.fill();});
   $('trajectoryCount').textContent=points.length+' points';
 }
+
+function compareSelectedRuns() {
+  const selected = [...compareSelection].map(id => runs.get(id)).filter(Boolean);
+  if (selected.length !== 2) return;
+  const summary = run => {
+    const times = run.events.map(e => eventTime(e)).filter(Boolean).map(d => d.getTime());
+    const duration = times.length > 1 ? Math.max(0, (Math.max(...times)-Math.min(...times))/1000) : null;
+    const tools = run.events.filter(e => /tool/.test(String(e.type))).length;
+    const errors = run.events.filter(e => /error|failure|exception/i.test(String(e.type))).length;
+    const metrics = run.events.filter(e => e.type === 'metric').length;
+    const types = [...new Set(run.events.map(e => e.type))].slice(0,6).join(', ');
+    return {duration,tools,errors,metrics,types};
+  };
+  const cards = selected.map(run => {
+    const s = summary(run);
+    return '<div class="compare-card"><strong>' + esc(run.name) + '</strong><div class="run-meta">' + esc(run.status) + '</div><div style="margin-top:8px">Events: <strong>' + run.events.length + '</strong><br>Duration: <strong>' + (s.duration === null ? 'n/a' : s.duration.toFixed(1)+' s') + '</strong><br>Tool events: <strong>' + s.tools + '</strong><br>Error-like events: <strong>' + s.errors + '</strong><br>Metric events: <strong>' + s.metrics + '</strong></div><div class="run-meta" style="margin-top:8px">Types: ' + esc(s.types || 'none') + '</div></div>';
+  }).join('');
+  $('runComparison').innerHTML = '<div class="compare-results">' + cards + '</div><div class="run-meta" style="margin-top:8px">Comparison is based on recorded event metadata; duration uses event timestamps when available.</div>';
+}
+
 function exportHistory() {
   const payload = JSON.stringify({ exported_at: new Date().toISOString(), event_count: allEvents.length, events: allEvents }, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
@@ -189,6 +220,7 @@ function connect() {
 }
 $('eventSearch').addEventListener('input',render);
 $('exportEvents').addEventListener('click',exportHistory);
+$('compareRuns').addEventListener('click',compareSelectedRuns);
 $('runSearch').addEventListener('input',render);
 $('replayPrev').addEventListener('click',()=>stepReplay(-1));
 $('replayNext').addEventListener('click',()=>stepReplay(1));
