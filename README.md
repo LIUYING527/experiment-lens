@@ -93,6 +93,12 @@ The first agent adapter observes Claude Code lifecycle and tool-use hooks. It se
 
    ```powershell
    python .\\integrations\\claude-code\\install_hooks.py --project "D:\\path\\to\\your\\project"
+
+To remove only the Experiment Lens hooks later, run:
+
+```powershell
+python .\\integrations\\claude-code\\uninstall_hooks.py --project "D:\\path\\to\\your\\project"
+```
    ```
 
    Replace the project path with the directory where you run Claude Code. The installer merges hooks into `.claude/settings.local.json`, preserves unrelated settings, creates a one-time backup before editing an existing file, and avoids adding duplicate commands if rerun. Review the resulting settings before using it. It does not modify global Claude Code settings.
