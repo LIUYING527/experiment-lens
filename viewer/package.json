@@ -10,7 +10,7 @@
     "test": "node --test event-store.test.js security.test.js"
   },
   "devDependencies": {
-    "electron": "^32.0.0",
+    "electron": "^44.9.0",
     "ws": "^8.18.0"
   }
 }
