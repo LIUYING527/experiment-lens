@@ -62,3 +62,20 @@ test('compacts the log to the current in-memory event window', async () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('does not persist large image data URLs in history', async () => {
+  const { dir, file } = tempFile();
+  try {
+    const store = new EventStore(file);
+    const event = { type: 'image', run_id: 'image-run', data: { name: 'frame.png', data_url: 'data:image/png;base64,VERY_LARGE_PAYLOAD' } };
+    await store.append(event, [event]);
+    await store.flush();
+    const persisted = JSON.parse(fs.readFileSync(file, 'utf8').trim());
+    assert.equal(persisted.data.name, 'frame.png');
+    assert.equal(persisted.data.payload_omitted, true);
+    assert.equal(Object.hasOwn(persisted.data, 'data_url'), false);
+    assert.equal(event.data.data_url, 'data:image/png;base64,VERY_LARGE_PAYLOAD');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
