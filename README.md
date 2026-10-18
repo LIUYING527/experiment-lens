@@ -140,6 +140,8 @@ Build a Windows x64 installer locally with `npm run dist:win` after `npm install
 
 - [Architecture and event contract](docs/ARCHITECTURE.md)
 - [Troubleshooting guide](docs/TROUBLESHOOTING.md)
+- [Security and privacy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 - [1.0 release readiness checklist](docs/RELEASE_CHECKLIST.md)
 
 ## Contributing
