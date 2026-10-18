@@ -10,6 +10,7 @@ const events = [];
 let windowRef;
 let wss;
 let eventStore;
+let quitAfterFlush = false;
 
 function sendEvent(event) {
   events.push(event);
@@ -63,4 +64,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => { startServer(); createWindow(); app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); }); });
+app.on('before-quit', event => {
+  if (quitAfterFlush || !eventStore) return;
+  event.preventDefault();
+  quitAfterFlush = true;
+  eventStore.flush().finally(() => app.quit());
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
