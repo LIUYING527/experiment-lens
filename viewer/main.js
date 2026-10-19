@@ -5,6 +5,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const { EventStore, sanitizeEvent } = require('./event-store');
 const { isTrustedLocalOrigin } = require('./security');
+const { readJsonBody } = require('./request-body');
 
 const HOST = '127.0.0.1';
 const PORT = 7337;
@@ -37,11 +38,25 @@ function startServer() {
     if (req.method === 'GET' && req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ ok: true, events: events.length })); }
     if (req.method === 'GET' && req.url === '/events') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(events)); }
     if (req.method === 'POST' && req.url === '/events') {
-      let body = '';
-      req.on('data', chunk => { body += chunk; if (body.length > 20 * 1024 * 1024) req.destroy(); });
-      req.on('end', () => {
-        try { const event = JSON.parse(body); if (typeof event.type !== 'string' || !event.type.trim()) throw new Error('event.type must be a non-empty string'); sendEvent(event); res.writeHead(202, { 'Content-Type': 'application/json' }); res.end('{"ok":true}'); }
-        catch (error) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: error.message })); }
+      readJsonBody(req).then(event => {
+        if (!event || typeof event !== 'object' || Array.isArray(event)) {
+          const error = new Error('Request body must be a JSON object');
+          error.statusCode = 400;
+          throw error;
+        }
+        if (typeof event.type !== 'string' || !event.type.trim()) {
+          const error = new Error('event.type must be a non-empty string');
+          error.statusCode = 400;
+          throw error;
+        }
+        sendEvent(event);
+        res.writeHead(202, { 'Content-Type': 'application/json' });
+        res.end('{"ok":true}');
+      }).catch(error => {
+        if (res.headersSent || res.destroyed) return;
+        const statusCode = error.statusCode || 400;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
       });
       return;
     }
