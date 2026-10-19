@@ -9,6 +9,9 @@ Notable changes to Experiment Lens are recorded here.
 - Added a first-run troubleshooting guide for the local service, SDK, port conflicts, and Claude Code hooks.
 - Added a security and privacy document covering local networking, event metadata, persistence, and reporting vulnerabilities.
 - Updated the documented Node.js requirement to match the Windows installer build environment.
+- Added a byte-based 20 MiB request-body limit and clear HTTP errors for malformed or oversized event submissions.
+- Added unit tests for valid JSON, malformed JSON, and oversized request bodies.
+- Improved the port-conflict troubleshooting commands so they can be copied without editing a placeholder.
 
 ## 0.1.0
 
