@@ -8,7 +8,8 @@ Python SDK / Agent adapter
           | POST http://127.0.0.1:7337/events
           v
 Electron main process
-  ├─ validates event type and local request origin
+  ├─ validates local request origin, JSON object shape, and event type
+  ├─ rejects event request bodies larger than 20 MiB with HTTP 413
   ├─ broadcasts the live event over WebSocket /stream
   ├─ keeps a bounded in-memory history
   └─ appends a sanitized event to local JSONL history
@@ -52,7 +53,7 @@ The HTTP and WebSocket service binds only to `127.0.0.1:7337`; it is not intende
 
 - `GET /health`: service health and current event count
 - `GET /events`: current in-memory history
-- `POST /events`: append one JSON event
+- `POST /events`: append one JSON event (20 MiB request-body limit)
 - `WS /stream`: sends a history snapshot on connection and live event messages afterward
 
 ## Claude Code adapter
