@@ -32,17 +32,11 @@ function readJsonBody(request, maxBytes = MAX_EVENT_BYTES) {
       if (settled) return;
       try {
         const body = Buffer.concat(chunks).toString('utf8');
+        const parsed = JSON.parse(body);
         settled = true;
-        resolve(JSON.parse(body));
-      } catch (error) {
-        if (settled) {
-          // JSON.parse failed after the promise was marked settled; report a client error.
-          const parseError = new Error('Request body must contain valid JSON');
-          parseError.statusCode = 400;
-          reject(parseError);
-        } else {
-          fail('Request body must contain valid JSON', 400);
-        }
+        resolve(parsed);
+      } catch (_) {
+        fail('Request body must contain valid JSON', 400);
       }
     });
 
