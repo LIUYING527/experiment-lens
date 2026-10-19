@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js && node --check analytics.js",
-    "test": "node --test event-store.test.js security.test.js analytics.test.js",
+    "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js && node --check analytics.js && node --check request-body.js",
+    "test": "node --test event-store.test.js security.test.js analytics.test.js request-body.test.js",
     "dist:win": "electron-builder --win nsis --x64"
   },
   "devDependencies": {
@@ -30,6 +30,7 @@
       "analytics.js",
       "event-store.js",
       "security.js",
+      "request-body.js",
       "package.json",
       "node_modules/ws/**/*"
     ],
