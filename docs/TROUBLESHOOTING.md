@@ -19,10 +19,12 @@ Get-NetTCPConnection -LocalPort 7337 -State Listen -ErrorAction SilentlyContinue
   Select-Object LocalAddress, LocalPort, OwningProcess
 ```
 
-To inspect a reported process ID:
+To inspect the process name and executable path without replacing a placeholder:
 
 ```powershell
-Get-Process -Id <PID>
+Get-NetTCPConnection -LocalPort 7337 -State Listen -ErrorAction SilentlyContinue |
+  ForEach-Object { Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue } |
+  Select-Object Id, ProcessName, Path
 ```
 
 Close the other application normally if it owns the port. The current viewer does not support configuring its listening port.
