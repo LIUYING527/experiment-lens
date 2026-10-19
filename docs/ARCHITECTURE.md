@@ -64,6 +64,6 @@ The adapter reads Claude Code hook JSON from stdin and sends event metadata to t
 
 Run from `viewer/`:
 
-- `npm run check` — syntax-check the Electron main process and renderer modules
-- `npm test` — test persistence, local-origin validation, and run-comparison analytics
+- `npm run check` — syntax-check the Electron main process, renderer modules, and request-body guard
+- `npm test` — test persistence, local-origin validation, request-body limits, and run-comparison analytics
 - `npm run dist:win` — build a Windows x64 NSIS installer
