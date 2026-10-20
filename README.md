@@ -94,6 +94,20 @@ lens.end_run(status="completed")
 
 The SDK is intentionally dependency-free and fails silently by default if the viewer is not running; pass `fail_silently=False` to surface connection errors.
 
+### Hugging Face Trainer integration
+
+For Hugging Face `Trainer` fine-tuning, the optional callback adapter forwards numeric training logs and evaluation metrics without adding a Transformers dependency to the Experiment Lens SDK:
+
+```python
+from experiment_lens import HuggingFaceTrainerCallback, Lens
+
+lens = Lens(run_name="my-finetune")
+trainer.add_callback(HuggingFaceTrainerCallback(lens))
+trainer.train()
+```
+
+Training metrics such as `loss` and `learning_rate` appear as training series; `eval_loss` and `eval_accuracy` become validation series. Evaluation updates arrive when the Trainer runs evaluation, so configure its normal evaluation schedule (for example, by steps or epochs) in your training arguments. The callback is intentionally small and can be adapted to other training frameworks.
+
 ## Claude Code integration (experimental)
 
 The first agent adapter observes Claude Code lifecycle and tool-use hooks. It sends metadata-only events to the local viewer: it does **not** forward prompt text, tool argument values, or tool output contents. It can record metadata such as tool names, input key names, working directory, hook type, and output size.
