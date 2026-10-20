@@ -99,7 +99,8 @@ The SDK is intentionally dependency-free and fails silently by default if the vi
 For Hugging Face `Trainer` fine-tuning, the optional callback adapter forwards numeric training logs and evaluation metrics without adding a Transformers dependency to the Experiment Lens SDK:
 
 ```python
-from experiment_lens import HuggingFaceTrainerCallback, Lens
+from experiment_lens import Lens
+from experiment_lens.integrations import HuggingFaceTrainerCallback
 
 lens = Lens(run_name="my-finetune")
 trainer.add_callback(HuggingFaceTrainerCallback(lens))
