@@ -58,6 +58,101 @@ function ingest(e, shouldRender = true) {
   else if (e.type === 'image' && e.data?.payload_omitted) lastImage = { name: e.data.name || 'Image artifact', payload_omitted: true };
   if (shouldRender) { rebuildRuns(); render(); }
 }
+const TRAINING_COLORS = ['#8b9cff', '#58d6a2', '#ffc879', '#ff8f9c', '#69c8f0', '#c5a3ff'];
+let selectedTrainingMetric = '';
+
+function getMetricEvents() {
+  return allEvents.filter(e => {
+    if (e.type !== 'metric' || !e.data || typeof e.data.name !== 'string') return false;
+    return e.data.value !== null && e.data.value !== '' && Number.isFinite(Number(e.data.value));
+  });
+}
+function metricSplit(e) {
+  return String(e.data.split || (e.data.phase === 'evaluation' ? 'validation' : e.data.phase) || 'metric');
+}
+function metricX(e, mode) {
+  if (mode === 'epoch') return Number(e.data.epoch);
+  if (mode === 'step') return Number(e.step ?? e.data.step ?? 0);
+  const t = eventTime(e);
+  return t ? t.getTime() / 1000 : 0;
+}
+function renderTrainingPanel() {
+  const metricEvents = getMetricEvents();
+  const names = [...new Set(metricEvents.map(e => e.data.name))].sort();
+  const select = $('trainingMetric');
+  if (!names.length) {
+    select.innerHTML = '<option value="">Waiting for metrics…</option>';
+    select.disabled = true;
+    $('trainingLatest').innerHTML = '<div class="metric-latest-item"><span>TRAINING STATUS</span><strong>Waiting for metric events</strong></div>';
+    $('trainingLegend').innerHTML = '';
+    $('trainingHint').textContent = 'No numeric metric events yet. Use Lens.training_metric(...) during training and Lens.evaluation_metric(...) after validation, or emit metric events directly.';
+    drawTrainingChart([], 'step');
+    return;
+  }
+  select.disabled = false;
+  if (!names.includes(selectedTrainingMetric)) selectedTrainingMetric = names.includes('loss') ? 'loss' : names[0];
+  const optionSignature = [...select.options].map(o => o.value).join('|');
+  if (optionSignature !== names.join('|')) select.innerHTML = names.map(name => '<option value="' + esc(name) + '">' + esc(name) + '</option>').join('');
+  select.value = selectedTrainingMetric;
+  const selected = metricEvents.filter(e => e.data.name === selectedTrainingMetric);
+  const mode = selected.some(e => Number.isFinite(Number(e.data.epoch)) && e.data.epoch !== undefined) ? 'epoch' : selected.some(e => e.step !== undefined || e.data.step !== undefined) ? 'step' : 'time';
+  const seriesMap = new Map();
+  for (const e of selected) {
+    const split = metricSplit(e);
+    if (!seriesMap.has(split)) seriesMap.set(split, []);
+    seriesMap.get(split).push({ x: metricX(e, mode), y: Number(e.data.value), event: e });
+  }
+  const series = [...seriesMap.entries()].map(([name, values], index) => ({ name, color: TRAINING_COLORS[index % TRAINING_COLORS.length], values: values.sort((a,b) => a.x - b.x) }));
+  drawTrainingChart(series, mode);
+  $('trainingLegend').innerHTML = series.map(s => '<span class="legend-item"><span class="legend-swatch" style="background:' + s.color + '"></span>' + esc(s.name) + ' · ' + s.values.length + ' points</span>').join('');
+  const latestCards = series.map(s => {
+    const p = s.values[s.values.length - 1];
+    const epoch = p.event.data.epoch !== undefined ? ' · epoch ' + p.event.data.epoch : (p.event.step !== undefined ? ' · step ' + p.event.step : '');
+    return '<div class="metric-latest-item"><span>' + esc(s.name.toUpperCase()) + '</span><strong>' + esc(Number(p.y.toPrecision(5)).toString()) + '</strong><span>' + esc(epoch ? epoch.slice(3).trim() : 'latest value') + '</span></div>';
+  }).join('');
+  $('trainingLatest').innerHTML = latestCards;
+  $('trainingHint').textContent = 'Metric: ' + selectedTrainingMetric + ' · x-axis: ' + (mode === 'epoch' ? 'epoch' : mode === 'step' ? 'step' : 'event time') + '. Each line represents a split such as train, validation, or test. Metrics refresh as events arrive and are included in the recent event history.';
+}
+function drawTrainingChart(series, mode) {
+  const canvas = $('trainingChart');
+  const ctx = canvas.getContext('2d');
+  const width = Math.max(1, canvas.clientWidth);
+  const height = Math.max(1, canvas.clientHeight);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, width, height);
+  const pad = { left: 54, right: 18, top: 20, bottom: 34 };
+  const plotW = Math.max(1, width - pad.left - pad.right), plotH = Math.max(1, height - pad.top - pad.bottom);
+  const values = series.flatMap(s => s.values);
+  ctx.font = '11px Segoe UI, sans-serif'; ctx.lineWidth = 1; ctx.strokeStyle = '#202b3d'; ctx.fillStyle = '#7f8ba1';
+  if (!values.length) {
+    ctx.textAlign = 'center'; ctx.fillText('Waiting for training / validation metrics', width / 2, height / 2);
+    return;
+  }
+  let minX = Math.min(...values.map(p => p.x)), maxX = Math.max(...values.map(p => p.x));
+  let minY = Math.min(...values.map(p => p.y)), maxY = Math.max(...values.map(p => p.y));
+  if (minX === maxX) { minX -= 1; maxX += 1; }
+  if (minY === maxY) { const padY = Math.max(Math.abs(minY) * 0.1, 0.5); minY -= padY; maxY += padY; }
+  else { const padY = (maxY - minY) * 0.08; minY -= padY; maxY += padY; }
+  const px = x => pad.left + (x - minX) / (maxX - minX) * plotW;
+  const py = y => pad.top + (maxY - y) / (maxY - minY) * plotH;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + plotH * i / 4; const val = maxY - (maxY - minY) * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(width - pad.right, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(Number(val.toPrecision(4)).toString(), pad.left - 8, y + 4);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = pad.left + plotW * i / 4; const val = minX + (maxX - minX) * i / 4;
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + plotH); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(mode === 'time' ? new Date(val * 1000).toLocaleTimeString() : Number(val.toPrecision(4)).toString(), x, height - 10);
+  }
+  for (const s of series) {
+    ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 2;
+    ctx.beginPath(); s.values.forEach((p, i) => i ? ctx.lineTo(px(p.x), py(p.y)) : ctx.moveTo(px(p.x), py(p.y))); ctx.stroke();
+    for (const p of s.values) { ctx.beginPath(); ctx.arc(px(p.x), py(p.y), 2.5, 0, Math.PI * 2); ctx.fill(); }
+  }
+}
+
 function render() {
   $('eventCount').textContent = allEvents.length.toLocaleString();
   $('runCount').textContent = [...runs.values()].filter(r => r.status === 'running').length;
@@ -217,6 +312,7 @@ $('replayPrev').addEventListener('click',()=>stepReplay(-1));
 $('replayNext').addEventListener('click',()=>stepReplay(1));
 $('replayToggle').addEventListener('click',toggleReplay);
 $('replayRange').addEventListener('input',()=>{replayIndex=Number($('replayRange').value)||0;updateReplay();});
-window.addEventListener('resize',drawTrajectory);
+window.addEventListener('resize',()=>{drawTrajectory();renderTrainingPanel();});
+$('trainingMetric').addEventListener('change',()=>{selectedTrainingMetric=$('trainingMetric').value;renderTrainingPanel();});
 $('preview').src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="220"><rect width="100%" height="100%" fill="#090e17"/><text x="50%" y="50%" fill="#536079" text-anchor="middle" font-family="sans-serif" font-size="13">No image event yet</text></svg>');
 render();connect();
