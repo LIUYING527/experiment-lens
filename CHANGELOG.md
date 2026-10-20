@@ -4,6 +4,10 @@ Notable changes to Experiment Lens are recorded here.
 
 ## Unreleased
 
+- Added a dedicated Training & Evaluation panel with live numeric metric curves grouped by metric and split.
+- Added Python SDK helpers for training and evaluation metrics, plus a synthetic training demo.
+- Overlay metric curves from recent runs to make experiment progress easier to compare.
+
 - Added CI and Windows installer status badges to the README.
 - Documented the current run history, replay, comparison, export, and persistence capabilities.
 - Added a first-run troubleshooting guide for the local service, SDK, port conflicts, and Claude Code hooks.
