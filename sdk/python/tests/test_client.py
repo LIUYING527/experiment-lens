@@ -100,6 +100,7 @@ class LensClientTests(unittest.TestCase):
         self.assertEqual(events[0]["step"], 25)
         self.assertEqual(events[2]["data"]["split"], "validation")
         self.assertEqual(events[2]["data"]["phase"], "evaluation")
+        self.assertEqual(events[2]["data"]["epoch"], 2.5)
         self.assertEqual(events[2]["data"]["value"], 0.38)
 
         callback.on_train_end(None, state, None)
