@@ -154,6 +154,7 @@ function drawTrainingChart(series, mode) {
 }
 
 function render() {
+  renderTrainingPanel();
   $('eventCount').textContent = allEvents.length.toLocaleString();
   $('runCount').textContent = [...runs.values()].filter(r => r.status === 'running').length;
   $('agentCount').textContent = allEvents.filter(e => String(e.type).startsWith('agent_') || e.data?.source === 'claude-code').length;
