@@ -1,9 +1,10 @@
 import json
 import threading
 import unittest
+from types import SimpleNamespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from experiment_lens import Lens
+from experiment_lens import HuggingFaceTrainerCallback, Lens
 
 
 class CaptureHandler(BaseHTTPRequestHandler):
@@ -74,6 +75,32 @@ class LensClientTests(unittest.TestCase):
         self.assertEqual(validation["data"]["phase"], "evaluation")
         self.assertEqual(validation["data"]["epoch"], 3)
         self.assertEqual(validation["data"]["dataset"], "dev")
+
+    def test_huggingface_callback_streams_training_and_validation_metrics(self):
+        lens = Lens(base_url=self.base_url, run_name="hf-finetune", fail_silently=False)
+        callback = HuggingFaceTrainerCallback(lens)
+        state = SimpleNamespace(global_step=25, epoch=2.0)
+        callback.on_log(None, state, None, logs={
+            "loss": 0.31,
+            "learning_rate": 0.0002,
+            "eval_loss": 0.42,
+            "message": "skip non-numeric",
+        })
+        callback.on_evaluate(None, state, None, metrics={
+            "eval_loss": 0.38,
+            "eval_accuracy": 0.89,
+            "eval_runtime": 1.2,
+        })
+        events = CaptureHandler.received[1:]
+        self.assertEqual([event["data"]["name"] for event in events], [
+            "loss", "learning_rate", "loss", "accuracy"
+        ])
+        self.assertEqual(events[0]["data"]["split"], "train")
+        self.assertEqual(events[0]["data"]["epoch"], 2)
+        self.assertEqual(events[0]["step"], 25)
+        self.assertEqual(events[2]["data"]["split"], "validation")
+        self.assertEqual(events[2]["data"]["phase"], "evaluation")
+        self.assertEqual(events[2]["data"]["value"], 0.38)
 
     def test_fail_silently_can_be_disabled(self):
         lens = Lens(base_url="http://127.0.0.1:1", timeout=0.05, fail_silently=True)
