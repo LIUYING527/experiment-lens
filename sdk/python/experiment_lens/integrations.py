@@ -69,6 +69,12 @@ class HuggingFaceTrainerCallback:
             self.lens.training_metric(name, value, step=step, epoch=epoch)
         return control
 
+    def on_train_end(self, args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
+        """Mark the run complete when Hugging Face Trainer finishes."""
+        del args, state, kwargs
+        self.lens.end_run(status="completed")
+        return control
+
     def on_evaluate(self, args: Any, state: Any, control: Any, metrics: Optional[Dict[str, Any]] = None, **kwargs: Any) -> Any:
         """Forward evaluation results as validation-split metric events."""
         del args, kwargs
