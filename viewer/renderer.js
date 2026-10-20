@@ -276,7 +276,16 @@ function compareSelectedRuns() {
   if (selected.length !== 2) return;
   const cards = selected.map(run => {
     const s = window.ExperimentLensAnalytics.summarizeRunEvents(run.events);
-    return '<div class="compare-card"><strong>' + esc(run.name) + '</strong><div class="run-meta">' + esc(run.status) + '</div><div style="margin-top:8px">Events: <strong>' + s.eventCount + '</strong><br>Duration: <strong>' + (s.durationSeconds === null ? 'n/a' : s.durationSeconds.toFixed(1)+' s') + '</strong><br>Tool events: <strong>' + s.toolEvents + '</strong><br>Error-like events: <strong>' + s.errorEvents + '</strong><br>Metric events: <strong>' + s.metricEvents + '</strong></div><div class="run-meta" style="margin-top:8px">Types: ' + esc(s.eventTypes.join(', ') || 'none') + '</div></div>';
+    const latestMetrics = new Map();
+    for (const event of run.events) {
+      if (event.type !== 'metric' || !event.data || typeof event.data.name !== 'string') continue;
+      const value = Number(event.data.value);
+      if (event.data.value === null || event.data.value === '' || !Number.isFinite(value)) continue;
+      const key = event.data.name + ' / ' + metricSplit(event);
+      latestMetrics.set(key, value);
+    }
+    const metricSummary = [...latestMetrics.entries()].slice(0, 6).map(([name, value]) => esc(name) + ': <strong>' + esc(Number(value.toPrecision(5)).toString()) + '</strong>').join('<br>');
+    return '<div class="compare-card"><strong>' + esc(run.name) + '</strong><div class="run-meta">' + esc(run.status) + '</div><div style="margin-top:8px">Events: <strong>' + s.eventCount + '</strong><br>Duration: <strong>' + (s.durationSeconds === null ? 'n/a' : s.durationSeconds.toFixed(1)+' s') + '</strong><br>Tool events: <strong>' + s.toolEvents + '</strong><br>Error-like events: <strong>' + s.errorEvents + '</strong><br>Metric events: <strong>' + s.metricEvents + '</strong></div><div class="run-meta" style="margin-top:10px">Latest metrics<br>' + (metricSummary || 'No numeric metrics') + '</div><div class="run-meta" style="margin-top:8px">Types: ' + esc(s.eventTypes.join(', ') || 'none') + '</div></div>';
   }).join('');
   $('runComparison').innerHTML = '<div class="compare-results">' + cards + '</div><div class="run-meta" style="margin-top:8px">Comparison is based on recorded event metadata; duration uses event timestamps when available.</div>';
 }
