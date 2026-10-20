@@ -23,7 +23,7 @@ jobs:
         working-directory: sdk/python
         run: python -m unittest discover -s tests -v
       - name: Compile example
-        run: python -m py_compile examples/vln_demo.py integrations/claude-code/hook.py integrations/claude-code/install_hooks.py integrations/claude-code/uninstall_hooks.py
+        run: python -m py_compile examples/vln_demo.py examples/training_demo.py integrations/claude-code/hook.py integrations/claude-code/install_hooks.py integrations/claude-code/uninstall_hooks.py
       - name: Test Claude Code hook adapter
         run: python -m unittest discover -s integrations/claude-code -p 'test_*.py' -v
 
