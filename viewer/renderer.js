@@ -72,7 +72,7 @@ function metricSplit(e) {
 }
 function metricX(e, mode) {
   if (mode === 'epoch') return Number(e.data.epoch);
-  if (mode === 'step') return Number(e.step ?? e.data.step ?? 0);
+  if (mode === 'step') return Number(e.data?.step ?? e.step ?? 0);
   const t = eventTime(e);
   return t ? t.getTime() / 1000 : 0;
 }
