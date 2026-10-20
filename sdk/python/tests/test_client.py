@@ -4,7 +4,8 @@ import unittest
 from types import SimpleNamespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from experiment_lens import HuggingFaceTrainerCallback, Lens
+from experiment_lens import Lens
+from experiment_lens.integrations import HuggingFaceTrainerCallback
 
 
 class CaptureHandler(BaseHTTPRequestHandler):
