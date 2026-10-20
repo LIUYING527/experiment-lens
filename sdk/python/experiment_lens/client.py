@@ -56,13 +56,13 @@ class Lens:
     def action(self, name: str, **metadata: Any) -> bool:
         return self.emit("action", {"name": name, **metadata})
 
-    def training_metric(self, name: str, value: Any, step: Optional[int] = None, epoch: Optional[int] = None, **metadata: Any) -> bool:
+    def training_metric(self, name: str, value: Any, step: Optional[int] = None, epoch: Optional[float] = None, **metadata: Any) -> bool:
         """Emit a training metric for live plotting (for example train loss)."""
         if step is not None:
             self._step = int(step)
         payload = {"name": name, "value": value, "split": "train", "phase": "training", **metadata}
         if epoch is not None:
-            payload["epoch"] = int(epoch)
+            payload["epoch"] = float(epoch)
         return self.emit("metric", payload)
 
     def evaluation_metric(self, name: str, value: Any, epoch: Optional[int] = None, step: Optional[int] = None, split: str = "validation", **metadata: Any) -> bool:
