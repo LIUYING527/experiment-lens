@@ -6,6 +6,7 @@ Notable changes to Experiment Lens are recorded here.
 
 - Added a dedicated Training & Evaluation panel with live numeric metric curves grouped by metric and split.
 - Added Python SDK helpers for training and evaluation metrics, plus a synthetic training demo.
+- Added a lightweight Hugging Face Trainer callback that forwards training logs, validation metrics, and run completion without requiring Transformers as an SDK dependency.
 - Overlay metric curves from recent runs to make experiment progress easier to compare.
 
 - Added CI and Windows installer status badges to the README.
