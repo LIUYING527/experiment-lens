@@ -17,7 +17,11 @@ Experiment Lens is not considered 1.0-ready until all required items below are c
 - [ ] Recent history survives a full application restart.
 - [ ] History stays bounded and image data URLs are omitted from persisted/exported metadata.
 - [ ] Run History filtering, replay controls, two-run comparison, and JSON export work.
-- [ ] Python demo produces a useful first-run experience.
+- [ ] Training & Evaluation charts correctly plot train/validation metrics by epoch, step, and event time.
+- [ ] Periodic evaluation events update curves without requiring per-step reporting.
+- [ ] Recent-run overlays and run comparison show metric values without mixing runs.
+- [ ] Agent/navigation demo and synthetic training demo both produce a useful first-run experience.
+- [ ] Training SDK helpers preserve metric name, value, split, phase, epoch, and step metadata.
 - [ ] Claude Code hook installation is idempotent, preserves unrelated settings, and can be cleanly removed.
 - [ ] Errors are understandable when the port is occupied, a hook fails, or the history file is malformed.
 - [ ] README explains install, usage, data handling, limitations, and troubleshooting.
