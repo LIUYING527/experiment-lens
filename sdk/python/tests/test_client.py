@@ -102,6 +102,10 @@ class LensClientTests(unittest.TestCase):
         self.assertEqual(events[2]["data"]["phase"], "evaluation")
         self.assertEqual(events[2]["data"]["value"], 0.38)
 
+        callback.on_train_end(None, state, None)
+        self.assertEqual(CaptureHandler.received[-1]["type"], "run_end")
+        self.assertEqual(CaptureHandler.received[-1]["data"]["status"], "completed")
+
     def test_fail_silently_can_be_disabled(self):
         lens = Lens(base_url="http://127.0.0.1:1", timeout=0.05, fail_silently=True)
         self.assertFalse(lens.metric("should_not_raise", 1))
