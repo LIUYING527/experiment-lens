@@ -96,11 +96,15 @@ function renderTrainingPanel() {
   select.value = selectedTrainingMetric;
   const selected = metricEvents.filter(e => e.data.name === selectedTrainingMetric);
   const mode = selected.some(e => Number.isFinite(Number(e.data.epoch)) && e.data.epoch !== undefined) ? 'epoch' : selected.some(e => e.step !== undefined || e.data.step !== undefined) ? 'step' : 'time';
+  const runOrder = [...new Set(allEvents.map(runId))];
+  const visibleRunIds = new Set(runOrder.slice(-6));
   const seriesMap = new Map();
-  for (const e of selected) {
+  for (const e of selected.filter(event => visibleRunIds.has(runId(event)))) {
     const split = metricSplit(e);
-    if (!seriesMap.has(split)) seriesMap.set(split, []);
-    seriesMap.get(split).push({ x: metricX(e, mode), y: Number(e.data.value), event: e });
+    const run = runs.get(runId(e));
+    const label = runOrder.length > 1 ? (run?.name || runId(e)) + ' / ' + split : split;
+    if (!seriesMap.has(label)) seriesMap.set(label, []);
+    seriesMap.get(label).push({ x: metricX(e, mode), y: Number(e.data.value), event: e });
   }
   const series = [...seriesMap.entries()].map(([name, values], index) => ({ name, color: TRAINING_COLORS[index % TRAINING_COLORS.length], values: values.sort((a,b) => a.x - b.x) }));
   drawTrainingChart(series, mode);
