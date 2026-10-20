@@ -1,8 +1,7 @@
 """Optional framework adapters for Experiment Lens.
 
-These adapters intentionally avoid importing training frameworks at module import
-time. The Hugging Face callback follows the TrainerCallback method protocol and
-can be used when Transformers is installed, without making it an SDK dependency.
+This module is an opt-in integration: Transformers is imported only when users
+explicitly import the Hugging Face adapter, and remains an optional dependency.
 """
 from __future__ import annotations
 
@@ -10,8 +9,15 @@ from typing import Any, Dict, Optional
 
 from .client import Lens
 
+try:
+    from transformers import TrainerCallback as _TrainerCallback
+except ImportError:
+    class _TrainerCallback:
+        """Fallback base for SDK test environments without Transformers."""
+        pass
 
-class HuggingFaceTrainerCallback:
+
+class HuggingFaceTrainerCallback(_TrainerCallback):
     """Stream Hugging Face Trainer logs and evaluation metrics to Experiment Lens.
 
     Usage:
