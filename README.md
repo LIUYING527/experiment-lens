@@ -1,8 +1,8 @@
 # Experiment Lens
 
-**A real-time observation window for AI agent workflows and experiments.**
+**A local-first desktop observability workspace for agent workflows, model training, and evaluation.**
 
-Experiment Lens is a Windows-first, local-first desktop viewer for observing long-running agent workflows and experiments without requiring agents to write custom visualization code. It is designed to be domain-neutral: coding agents, data pipelines, robotics, and model evaluations can all emit events into the same viewer.
+Experiment Lens is a Windows-first, local-first desktop viewer inspired by always-available agent observation tools. It combines live agent activity with training curves and validation metrics, so researchers can watch long-running experiments as they train and evaluate. Coding agents, robotics, reinforcement learning, fine-tuning jobs, and custom evaluation scripts can emit structured events through the same lightweight Python SDK.
 
 [![CI](https://github.com/LIUYING527/experiment-lens/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LIUYING527/experiment-lens/actions/workflows/ci.yml)
 [![Windows installer](https://github.com/LIUYING527/experiment-lens/actions/workflows/windows-installer.yml/badge.svg?branch=main)](https://github.com/LIUYING527/experiment-lens/actions/workflows/windows-installer.yml)
@@ -10,6 +10,9 @@ Experiment Lens is a Windows-first, local-first desktop viewer for observing lon
 ## What it does
 
 - Live event stream and run status
+- Live train/validation metric curves grouped by metric and split
+- Training and evaluation metrics indexed by epoch, step, or event time
+- Overlay curves from recent experiment runs for quick comparisons
 - Metrics, action events, tool activity, and errors
 - Image previews for live image events
 - Optional 2D trajectory points
@@ -58,11 +61,19 @@ python -m pip install -e ./sdk/python
 
 ### 3. Send demo events
 
+For agent/navigation-style events:
+
 ```powershell
 python examples/vln_demo.py
 ```
 
-The demo emits synthetic metrics, actions, and trajectory points. It does not run a real navigation benchmark.
+For training and validation curves:
+
+```powershell
+python examples/training_demo.py
+```
+
+The training demo emits **synthetic** train loss, validation loss, and validation accuracy. It does not train a real model. In the dashboard's Training & Evaluation panel, select `loss` to overlay training and validation curves, or select `accuracy` to inspect validation accuracy.
 
 ### Windows installer
 
@@ -74,7 +85,8 @@ The Windows x64 NSIS installer is built by GitHub Actions. Open the [Windows ins
 from experiment_lens import Lens
 
 lens = Lens(run_name="my-agent-run")
-lens.metric("reward", 0.82)
+lens.training_metric("loss", 0.42, step=1200, epoch=3, learning_rate=0.0003)
+lens.evaluation_metric("accuracy", 0.91, epoch=3, split="validation")
 lens.action("tool_call", tool="search")
 lens.step(step=1, message="First step complete")
 lens.end_run(status="completed")
@@ -112,6 +124,7 @@ The adapter is experimental. Hook event names and payloads can vary by Claude Co
 - Large image `data_url` payloads are intentionally omitted from persisted history and JSON exports to keep storage bounded. A live image preview can still update while the event is streaming.
 - Replay is read-only inspection of recorded events; it does not rerun the agent.
 - The trajectory view expects simple 2D point arrays such as `[[x, y], ...]`.
+- Training charts currently use numeric `metric` events; use `Lens.training_metric(...)` and `Lens.evaluation_metric(...)`, or call `Lens.metric(...)` with `split`, `epoch`, and other metadata. Metrics update only when your process emits them, so periodic evaluation is supported without continuous per-step reporting.
 - The Claude Code adapter is metadata-only by design, but users should review the event schema and local settings before using it with sensitive projects.
 - A successful automated build does not replace a clean-machine Windows acceptance test. Installer startup, SDK-to-viewer behavior, and the installed Claude Code hook chain remain part of final release acceptance.
 
