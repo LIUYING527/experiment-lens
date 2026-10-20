@@ -59,6 +59,22 @@ class LensClientTests(unittest.TestCase):
         self.assertEqual(step["step"], 4)
         self.assertEqual(step["data"]["note"], "checkpoint")
 
+    def test_training_and_evaluation_metrics_include_plotting_metadata(self):
+        lens = Lens(base_url=self.base_url, run_name="training-run", fail_silently=False)
+        lens.training_metric("loss", 0.42, step=12, epoch=3, learning_rate=0.0003)
+        lens.evaluation_metric("accuracy", 0.91, epoch=3, split="validation", dataset="dev")
+        train, validation = CaptureHandler.received[1:]
+        self.assertEqual(train["type"], "metric")
+        self.assertEqual(train["step"], 12)
+        self.assertEqual(train["data"]["split"], "train")
+        self.assertEqual(train["data"]["phase"], "training")
+        self.assertEqual(train["data"]["epoch"], 3)
+        self.assertEqual(train["data"]["value"], 0.42)
+        self.assertEqual(validation["data"]["split"], "validation")
+        self.assertEqual(validation["data"]["phase"], "evaluation")
+        self.assertEqual(validation["data"]["epoch"], 3)
+        self.assertEqual(validation["data"]["dataset"], "dev")
+
     def test_fail_silently_can_be_disabled(self):
         lens = Lens(base_url="http://127.0.0.1:1", timeout=0.05, fail_silently=True)
         self.assertFalse(lens.metric("should_not_raise", 1))
