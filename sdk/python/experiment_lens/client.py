@@ -65,13 +65,13 @@ class Lens:
             payload["epoch"] = float(epoch)
         return self.emit("metric", payload)
 
-    def evaluation_metric(self, name: str, value: Any, epoch: Optional[int] = None, step: Optional[int] = None, split: str = "validation", **metadata: Any) -> bool:
+    def evaluation_metric(self, name: str, value: Any, epoch: Optional[float] = None, step: Optional[int] = None, split: str = "validation", **metadata: Any) -> bool:
         """Emit a validation/test metric, usually after an evaluation pass."""
         if step is not None:
             self._step = int(step)
         payload = {"name": name, "value": value, "split": split, "phase": "evaluation", **metadata}
         if epoch is not None:
-            payload["epoch"] = int(epoch)
+            payload["epoch"] = float(epoch)
         return self.emit("metric", payload)
 
     def trajectory(self, points: Any, **metadata: Any) -> bool:
