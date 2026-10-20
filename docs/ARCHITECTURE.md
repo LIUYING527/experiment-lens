@@ -60,7 +60,7 @@ The HTTP and WebSocket service binds only to `127.0.0.1:7337`; it is not intende
 
 ## Training and evaluation observability
 
-The SDK helpers `training_metric()` and `evaluation_metric()` emit standard `metric` events with split, phase, epoch, and step metadata. The dashboard updates curves whenever those events arrive, so training metrics may be sent every step while validation metrics may be sent only after an evaluation pass or checkpoint. The current renderer plots numeric metrics and overlays the latest six run IDs; it does not automatically read framework logs or instrument a training loop on its own.
+The SDK helpers `training_metric()` and `evaluation_metric()` emit standard `metric` events with split, phase, epoch, and step metadata. The optional `HuggingFaceTrainerCallback` adapts the Transformers Trainer callback protocol without importing Transformers at SDK import time; it forwards numeric training logs, validation results, and run completion. The dashboard updates curves whenever those events arrive, so training metrics may be sent every step while validation metrics may be sent only after an evaluation pass or checkpoint. The current renderer plots numeric metrics and overlays the latest six run IDs; it does not automatically read framework logs or instrument a training loop on its own.
 
 Run `python examples/training_demo.py` to see synthetic train loss, validation loss, and validation accuracy. The demo is for visualization only and does not train a real model.
 
