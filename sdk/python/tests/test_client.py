@@ -79,7 +79,7 @@ class LensClientTests(unittest.TestCase):
     def test_huggingface_callback_streams_training_and_validation_metrics(self):
         lens = Lens(base_url=self.base_url, run_name="hf-finetune", fail_silently=False)
         callback = HuggingFaceTrainerCallback(lens)
-        state = SimpleNamespace(global_step=25, epoch=2.0)
+        state = SimpleNamespace(global_step=25, epoch=2.5)
         callback.on_log(None, state, None, logs={
             "loss": 0.31,
             "learning_rate": 0.0002,
@@ -96,7 +96,7 @@ class LensClientTests(unittest.TestCase):
             "loss", "learning_rate", "loss", "accuracy"
         ])
         self.assertEqual(events[0]["data"]["split"], "train")
-        self.assertEqual(events[0]["data"]["epoch"], 2)
+        self.assertEqual(events[0]["data"]["epoch"], 2.5)
         self.assertEqual(events[0]["step"], 25)
         self.assertEqual(events[2]["data"]["split"], "validation")
         self.assertEqual(events[2]["data"]["phase"], "evaluation")
