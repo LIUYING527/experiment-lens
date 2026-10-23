@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from experiment_lens.log_importer import convert_row, read_log, import_rows
+from experiment_lens.log_importer import LogFollower, convert_row, read_log, import_rows
 
 
 class FakeLens:
@@ -60,6 +60,31 @@ class LogImporterTests(unittest.TestCase):
             jsonl_path.write_text(json.dumps({"step": 2, "eval_loss": 0.4}) + "\n", encoding="utf-8")
             self.assertEqual(len(read_log(csv_path)), 1)
             self.assertEqual(read_log(jsonl_path)[0]["step"], 2)
+
+
+    def test_jsonl_follower_waits_for_complete_line_and_reads_appends_once(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.jsonl"
+            path.write_text('{"step": 1, "train_loss": 0.5}\n', encoding="utf-8")
+            follower = LogFollower(path)
+            self.assertEqual(follower.poll(), [{"step": 1, "train_loss": 0.5}])
+            self.assertEqual(follower.poll(), [])
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write('{"step": 2, "train_loss":')
+            self.assertEqual(follower.poll(), [])
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(' 0.4}\n')
+            self.assertEqual(follower.poll(), [{"step": 2, "train_loss": 0.4}])
+
+    def test_csv_follower_reads_header_then_appended_rows(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.csv"
+            path.write_text("step,train_loss\n1,0.5\n", encoding="utf-8")
+            follower = LogFollower(path)
+            self.assertEqual(follower.poll(), [{"step": "1", "train_loss": "0.5"}])
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write("2,0.4\n")
+            self.assertEqual(follower.poll(), [{"step": "2", "train_loss": "0.4"}])
 
     def test_import_rows_emits_train_and_validation_metrics(self):
         lens = FakeLens()

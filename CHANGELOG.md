@@ -10,6 +10,7 @@ Notable changes to Experiment Lens are recorded here.
 - Overlay metric curves from recent runs to make experiment progress easier to compare.
 - Import existing CSV, JSONL, and NDJSON training logs, including TensorBoard scalar CSV exports and slash-style train/eval tags.
 - Add a `--metric-name` override for TensorBoard scalar CSVs that do not include a `Tag` column.
+- Make `--watch` consume only newly appended complete CSV/JSONL rows instead of rescanning the entire log on every poll.
 
 - Added CI and Windows installer status badges to the README.
 - Documented the current run history, replay, comparison, export, and persistence capabilities.

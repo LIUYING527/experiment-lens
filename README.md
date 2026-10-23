@@ -97,7 +97,7 @@ Follow a log while it grows (the importer polls for appended rows):
 python -m experiment_lens.log_importer .\\logs\\metrics.jsonl --run-name my-finetune --watch --interval 2
 \`\`\`
 
-Keep the desktop viewer running while importing. The importer reads local files and forwards numeric metrics to the local viewer; it does not upload the source log. In watch mode, it notices appended rows and resets its cursor if the file is truncated or rotated.
+Keep the desktop viewer running while importing. The importer reads local files and forwards numeric metrics to the local viewer; it does not upload the source log. In watch mode, it incrementally reads newly appended complete rows rather than repeatedly loading the entire log, and resets its cursor if the file is truncated or rotated.
 
 ### Windows installer
 

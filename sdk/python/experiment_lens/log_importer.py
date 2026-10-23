@@ -125,8 +125,75 @@ def import_rows(rows: Iterable[Dict[str, Any]], lens: Lens, default_metric_name:
     return count
 
 
-def _row_signature(row: Dict[str, Any]) -> str:
-    return json.dumps(row, sort_keys=True, ensure_ascii=False, default=str)
+
+class LogFollower:
+    """Incrementally read appended CSV/JSONL rows without rescanning the full file."""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self._identity = None
+        self._offset = 0
+        self._last_mtime_ns = None
+        self._pending = b""
+        self._header: Optional[List[str]] = None
+        self._line_number = 0
+
+    def _reset(self, identity: Tuple[int, int]) -> None:
+        self._identity = identity
+        self._offset = 0
+        self._last_mtime_ns = None
+        self._pending = b""
+        self._header = None
+        self._line_number = 0
+
+    def _parse_line(self, raw_line: bytes) -> Optional[Dict[str, Any]]:
+        self._line_number += 1
+        line = raw_line.decode("utf-8-sig" if self._line_number == 1 else "utf-8").rstrip("\r")
+        if not line.strip():
+            return None
+        if self.path.suffix.lower() in {".jsonl", ".ndjson"}:
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError("Invalid JSON on line {}: {}".format(self._line_number, exc)) from exc
+            if not isinstance(row, dict):
+                raise ValueError("Expected a JSON object on line {}".format(self._line_number))
+            return row
+        try:
+            cells = next(csv.reader([line]))
+        except csv.Error as exc:
+            raise ValueError("Invalid CSV on line {}: {}".format(self._line_number, exc)) from exc
+        if self._header is None:
+            self._header = [cell.strip() for cell in cells]
+            return None
+        return dict(zip(self._header, cells))
+
+    def poll(self) -> List[Dict[str, Any]]:
+        """Return only complete rows added since the previous poll."""
+        stat = self.path.stat()
+        identity = (getattr(stat, "st_dev", 0), getattr(stat, "st_ino", 0))
+        if (self._identity != identity or stat.st_size < self._offset or
+                (self._offset > 0 and stat.st_size == self._offset and
+                 self._last_mtime_ns is not None and stat.st_mtime_ns != self._last_mtime_ns)):
+            self._reset(identity)
+
+        with self.path.open("rb") as handle:
+            handle.seek(self._offset)
+            chunk = handle.read()
+            self._offset = handle.tell()
+        self._last_mtime_ns = stat.st_mtime_ns
+        if not chunk:
+            return []
+
+        data = self._pending + chunk
+        lines = data.split(b"\n")
+        self._pending = lines.pop()
+        rows: List[Dict[str, Any]] = []
+        for raw_line in lines:
+            row = self._parse_line(raw_line)
+            if row is not None:
+                rows.append(row)
+        return rows
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -145,21 +212,20 @@ def main(argv: Optional[List[str]] = None) -> int:
         parser.error("log file does not exist: {}".format(args.file))
 
     lens = Lens(base_url=args.url, run_name=args.run_name or args.file.stem)
-    seen_rows: List[str] = []
     try:
-        while True:
+        if not args.watch:
             rows = read_log(args.file)
-            signatures = [_row_signature(row) for row in rows]
-            if len(signatures) < len(seen_rows) or signatures[:len(seen_rows)] != seen_rows:
-                # A truncation, rotation, or rewrite resets the cursor and replays the current file.
-                seen_rows = []
-            for index in range(len(seen_rows), len(rows)):
-                emitted = import_rows([rows[index]], lens, default_metric_name=args.metric_name)
+            emitted = import_rows(rows, lens, default_metric_name=args.metric_name)
+            print("Imported {} metric(s) from {}".format(emitted, args.file.name))
+            return 0
+
+        follower = LogFollower(args.file)
+        while True:
+            rows = follower.poll()
+            if rows:
+                emitted = import_rows(rows, lens, default_metric_name=args.metric_name)
                 if emitted:
-                    print("Imported {} metric(s) from row {}".format(emitted, index + 2))
-            seen_rows = signatures
-            if not args.watch:
-                break
+                    print("Imported {} metric(s) from new log rows".format(emitted))
             time.sleep(args.interval)
     except KeyboardInterrupt:
         pass
