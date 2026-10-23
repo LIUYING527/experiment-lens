@@ -86,6 +86,27 @@ class LogImporterTests(unittest.TestCase):
                 handle.write("2,0.4\n")
             self.assertEqual(follower.poll(), [{"step": "2", "train_loss": "0.4"}])
 
+
+    def test_follower_replays_rows_after_file_truncation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.jsonl"
+            path.write_text('{"step": 1, "train_loss": 0.5}\n{"step": 2, "train_loss": 0.4}\n', encoding="utf-8")
+            follower = LogFollower(path)
+            self.assertEqual(len(follower.poll()), 2)
+            path.write_text('{"step": 1, "train_loss": 0.3}\n', encoding="utf-8")
+            self.assertEqual(follower.poll(), [{"step": 1, "train_loss": 0.3}])
+
+    def test_follower_waits_for_rotated_file_to_reappear(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "metrics.jsonl"
+            path.write_text('{"step": 1}\n', encoding="utf-8")
+            follower = LogFollower(path)
+            self.assertEqual(follower.poll(), [{"step": 1}])
+            path.unlink()
+            self.assertEqual(follower.poll(), [])
+            path.write_text('{"step": 2, "train_loss": 0.4}\n', encoding="utf-8")
+            self.assertEqual(follower.poll(), [{"step": 2, "train_loss": 0.4}])
+
     def test_import_rows_emits_train_and_validation_metrics(self):
         lens = FakeLens()
         count = import_rows([{"step": 3, "train_loss": 0.2, "eval_loss": 0.3}], lens)

@@ -170,7 +170,11 @@ class LogFollower:
 
     def poll(self) -> List[Dict[str, Any]]:
         """Return only complete rows added since the previous poll."""
-        stat = self.path.stat()
+        try:
+            stat = self.path.stat()
+        except FileNotFoundError:
+            self._reset((-1, -1))
+            return []
         identity = (getattr(stat, "st_dev", 0), getattr(stat, "st_ino", 0))
         if (self._identity != identity or stat.st_size < self._offset or
                 (self._offset > 0 and stat.st_size == self._offset and
@@ -208,6 +212,8 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.interval < 0.2:
         parser.error("--interval must be at least 0.2 seconds")
+    if args.file.suffix.lower() not in {".csv", ".jsonl", ".ndjson"}:
+        parser.error("unsupported log format; use .csv, .jsonl, or .ndjson")
     if not args.file.is_file():
         parser.error("log file does not exist: {}".format(args.file))
 
