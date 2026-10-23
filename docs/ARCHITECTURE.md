@@ -3,7 +3,7 @@
 ## Data flow
 
 ```text
-Python SDK / Agent adapter
+Python SDK / Agent adapter / CSV-JSONL-TensorBoard log importer
           |
           | POST http://127.0.0.1:7337/events
           v

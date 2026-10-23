@@ -38,7 +38,11 @@ class LogImporterTests(unittest.TestCase):
         records = convert_row({"Wall time": "1700000000.5", "Step": "42", "Value": "0.125", "Tag": "train/loss"})
         self.assertEqual(records, [{"name": "loss", "value": 0.125, "split": "train", "step": 42.0, "epoch": None}])
 
-    def test_tensorboard_scalar_csv_without_tag_does_not_treat_wall_time_as_metric(self):
+    def test_tensorboard_scalar_csv_without_tag_uses_explicit_fallback_name(self):
+        records = convert_row({"Wall time": "1700000000.5", "Step": "42", "Value": "0.125"}, default_metric_name="loss")
+        self.assertEqual(records, [{"name": "loss", "value": 0.125, "split": "train", "step": 42.0, "epoch": None}])
+
+    def test_tensorboard_scalar_csv_without_tag_has_safe_default_name(self):
         records = convert_row({"Wall time": "1700000000.5", "Step": "42", "Value": "0.125"})
         self.assertEqual(records, [{"name": "value", "value": 0.125, "split": "train", "step": 42.0, "epoch": None}])
 

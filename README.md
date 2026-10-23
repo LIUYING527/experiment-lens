@@ -83,6 +83,12 @@ Import a completed log:
 
 \`\`\`powershell
 python -m experiment_lens.log_importer .\\logs\\metrics.csv --run-name my-finetune
+
+For a TensorBoard scalar CSV without a `Tag` column, name the series explicitly:
+
+```powershell
+python -m experiment_lens.log_importer .\\logs\\loss.csv --metric-name loss --run-name my-finetune
+```
 \`\`\`
 
 Follow a log while it grows (the importer polls for appended rows):

@@ -8,6 +8,8 @@ Notable changes to Experiment Lens are recorded here.
 - Added Python SDK helpers for training and evaluation metrics, plus a synthetic training demo.
 - Added a lightweight Hugging Face Trainer callback that forwards training logs, validation metrics, and run completion without requiring Transformers as an SDK dependency.
 - Overlay metric curves from recent runs to make experiment progress easier to compare.
+- Import existing CSV, JSONL, and NDJSON training logs, including TensorBoard scalar CSV exports and slash-style train/eval tags.
+- Add a `--metric-name` override for TensorBoard scalar CSVs that do not include a `Tag` column.
 
 - Added CI and Windows installer status badges to the README.
 - Documented the current run history, replay, comparison, export, and persistence capabilities.

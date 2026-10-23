@@ -61,7 +61,7 @@ def _metric_name_and_split(column: str, row_split: Any = None) -> Tuple[str, str
     return column, split
 
 
-def convert_row(row: Dict[str, Any]) -> List[Dict[str, Any]]:
+def convert_row(row: Dict[str, Any], default_metric_name: Optional[str] = None) -> List[Dict[str, Any]]:
     """Convert one wide or long log row into normalized metric records."""
     if not isinstance(row, dict):
         return []
@@ -72,7 +72,7 @@ def convert_row(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     explicit_value = _number(_first(row, ("value",)))
     if explicit_value is not None and (explicit_name is not None or _first(row, ("value",)) is not None):
         # TensorBoard exports commonly omit Tag when each scalar has its own file.
-        name, split = _metric_name_and_split(str(explicit_name or "value"), row_split)
+        name, split = _metric_name_and_split(str(explicit_name or default_metric_name or "value"), row_split)
         return [{"name": name, "value": explicit_value, "split": split, "step": step, "epoch": epoch}]
 
     records: List[Dict[str, Any]] = []
@@ -109,11 +109,11 @@ def read_log(path: Path) -> List[Dict[str, Any]]:
     raise ValueError("Unsupported log format '{}'; use .csv, .jsonl, or .ndjson".format(suffix or "(no extension)"))
 
 
-def import_rows(rows: Iterable[Dict[str, Any]], lens: Lens) -> int:
+def import_rows(rows: Iterable[Dict[str, Any]], lens: Lens, default_metric_name: Optional[str] = None) -> int:
     """Emit normalized metric events for rows and return the number emitted."""
     count = 0
     for row in rows:
-        for record in convert_row(row):
+        for record in convert_row(row, default_metric_name=default_metric_name):
             step = int(record["step"]) if record["step"] is not None else None
             epoch = record["epoch"]
             if record["split"] == "train":
@@ -134,6 +134,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("file", type=Path, help="Path to a .csv, .jsonl, or .ndjson log")
     parser.add_argument("--run-name", default=None, help="Name shown in Experiment Lens (defaults to file name)")
     parser.add_argument("--url", default="http://127.0.0.1:7337", help="Local Experiment Lens event endpoint")
+    parser.add_argument("--metric-name", default=None, help="Fallback metric name for scalar CSV rows without a Tag (e.g. loss)")
     parser.add_argument("--watch", action="store_true", help="Poll for newly appended rows")
     parser.add_argument("--interval", type=float, default=2.0, help="Polling interval in seconds (default: 2)")
     args = parser.parse_args(argv)
@@ -153,7 +154,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 # A truncation, rotation, or rewrite resets the cursor and replays the current file.
                 seen_rows = []
             for index in range(len(seen_rows), len(rows)):
-                emitted = import_rows([rows[index]], lens)
+                emitted = import_rows([rows[index]], lens, default_metric_name=args.metric_name)
                 if emitted:
                     print("Imported {} metric(s) from row {}".format(emitted, index + 2))
             seen_rows = signatures
