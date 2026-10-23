@@ -28,11 +28,19 @@ class LogImporterTests(unittest.TestCase):
         self.assertEqual(records[0]["step"], 20)
         self.assertEqual(records[0]["epoch"], 2.5)
 
-    def test_long_row_uses_explicit_split(self):
-        record = convert_row({"global_step": 7, "name": "accuracy", "value": "0.88", "split": "dev"})[0]
+    def test_long_row_uses_case_insensitive_keys_and_explicit_split(self):
+        record = convert_row({"Global_Step": 7, "Name": "accuracy", "Value": "0.88", "Split": "dev"})[0]
         self.assertEqual(record["name"], "accuracy")
         self.assertEqual(record["split"], "validation")
         self.assertEqual(record["step"], 7)
+
+    def test_tensorboard_scalar_csv_row_with_tag(self):
+        records = convert_row({"Wall time": "1700000000.5", "Step": "42", "Value": "0.125", "Tag": "train/loss"})
+        self.assertEqual(records, [{"name": "loss", "value": 0.125, "split": "train", "step": 42.0, "epoch": None}])
+
+    def test_tensorboard_scalar_csv_without_tag_does_not_treat_wall_time_as_metric(self):
+        records = convert_row({"Wall time": "1700000000.5", "Step": "42", "Value": "0.125"})
+        self.assertEqual(records, [{"name": "value", "value": 0.125, "split": "train", "step": 42.0, "epoch": None}])
 
     def test_non_finite_and_non_numeric_values_are_ignored(self):
         self.assertEqual(convert_row({"step": 1, "loss": "NaN", "message": "hello", "inf": "Infinity"}), [])

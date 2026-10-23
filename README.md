@@ -77,7 +77,7 @@ The training demo emits **synthetic** train loss, validation loss, and validatio
 
 ### Import existing training logs (CSV / JSONL)
 
-You can visualize logs from a training run without editing the training loop. Supported files are CSV, JSONL, and NDJSON. Wide CSV rows such as \`step,epoch,train_loss,eval_loss,eval_accuracy\` are detected automatically; long rows such as \`step,name,value,split\` are also supported. Prefixes \`train_\`, \`eval_\`, \`validation_\`, \`val_\`, and \`test_\` map metric names to their data split.
+You can visualize logs from a training run without editing the training loop. Supported files are CSV, JSONL, and NDJSON. Wide CSV rows such as \`step,epoch,train_loss,eval_loss,eval_accuracy\` are detected automatically; long rows such as \`step,name,value,split\` are also supported. TensorBoard scalar CSV exports (\`Wall time,Step,Value\`, optionally with \`Tag\`) and case-insensitive column names are supported. Prefixes \`train_\`, \`eval_\`, \`validation_\`, \`val_\`, and \`test_\` (also slash-style tags such as \`train/loss\`) map metric names to their data split.
 
 Import a completed log:
 

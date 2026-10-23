@@ -3,6 +3,7 @@
 Accepted formats:
 - Wide rows: step, epoch, train_loss, eval_loss, eval_accuracy
 - Long rows: step, epoch, name, value, split
+- TensorBoard scalar CSV: Wall time, Step, Value (optionally with a Tag column)
 - JSONL uses one JSON object per line with the same fields.
 """
 from __future__ import annotations
@@ -17,7 +18,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .client import Lens
 
-_RESERVED = {"step", "global_step", "epoch", "split", "phase", "name", "metric", "value", "timestamp", "ts", "run_id", "run_name"}
+_RESERVED = {
+    "step", "global_step", "epoch", "split", "phase", "name", "metric", "tag",
+    "value", "timestamp", "ts", "run_id", "run_name", "wall time", "wall_time",
+    "walltime", "time", "datetime", "date",
+}
 
 
 def _number(value: Any) -> Optional[float]:
@@ -31,20 +36,26 @@ def _number(value: Any) -> Optional[float]:
 
 
 def _first(row: Dict[str, Any], names: Iterable[str]) -> Any:
-    for name in names:
-        if row.get(name) not in (None, ""):
-            return row[name]
+    wanted = {name.lower() for name in names}
+    for key, value in row.items():
+        if key.lower().strip() in wanted and value not in (None, ""):
+            return value
     return None
 
 
 def _metric_name_and_split(column: str, row_split: Any = None) -> Tuple[str, str]:
-    lowered = column.lower()
-    for prefix, split in (("train_", "train"), ("training_", "train"),
-                          ("eval_", "validation"), ("validation_", "validation"),
-                          ("val_", "validation"), ("test_", "test")):
+    lowered = column.lower().strip()
+    for prefix, split in (
+        ("train_", "train"), ("training_", "train"),
+        ("eval_", "validation"), ("validation_", "validation"),
+        ("val_", "validation"), ("test_", "test"),
+        ("train/", "train"), ("training/", "train"),
+        ("eval/", "validation"), ("validation/", "validation"),
+        ("val/", "validation"), ("test/", "test"),
+    ):
         if lowered.startswith(prefix) and len(column) > len(prefix):
             return column[len(prefix):], split
-    split = str(row_split or "train").lower()
+    split = str(row_split or "train").lower().strip()
     if split in {"eval", "val", "dev"}:
         split = "validation"
     return column, split
@@ -55,17 +66,18 @@ def convert_row(row: Dict[str, Any]) -> List[Dict[str, Any]]:
     if not isinstance(row, dict):
         return []
     step = _number(_first(row, ("step", "global_step")))
-    epoch = _number(row.get("epoch"))
-    row_split = row.get("split")
-    explicit_name = _first(row, ("name", "metric"))
-    explicit_value = _number(row.get("value"))
-    if explicit_name is not None and explicit_value is not None:
-        name, split = _metric_name_and_split(str(explicit_name), row_split)
+    epoch = _number(_first(row, ("epoch",)))
+    row_split = _first(row, ("split",))
+    explicit_name = _first(row, ("name", "metric", "tag"))
+    explicit_value = _number(_first(row, ("value",)))
+    if explicit_value is not None and (explicit_name is not None or _first(row, ("value",)) is not None):
+        # TensorBoard exports commonly omit Tag when each scalar has its own file.
+        name, split = _metric_name_and_split(str(explicit_name or "value"), row_split)
         return [{"name": name, "value": explicit_value, "split": split, "step": step, "epoch": epoch}]
 
     records: List[Dict[str, Any]] = []
     for column, raw_value in row.items():
-        if column.lower() in _RESERVED or column.lower().endswith("_timestamp"):
+        if column.strip().lower() in _RESERVED or column.strip().lower().endswith("_timestamp"):
             continue
         value = _number(raw_value)
         if value is None:
