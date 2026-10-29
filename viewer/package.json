@@ -43,7 +43,7 @@
           ]
         }
       ],
-      "artifactName": "Viziverse-Setup-\${version}-\${arch}.\${ext}"
+      "artifactName": "Viziverse-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
