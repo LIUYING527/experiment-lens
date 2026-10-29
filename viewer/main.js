@@ -6,6 +6,7 @@ const { pathToFileURL } = require('url');
 const { EventStore, sanitizeEvent } = require('./event-store');
 const { isTrustedLocalOrigin } = require('./security');
 const { readJsonBody } = require('./request-body');
+const { normalizeEvent } = require('./event-schema');
 
 const HOST = '127.0.0.1';
 const PORT = 7337;
@@ -49,7 +50,8 @@ function startServer() {
           error.statusCode = 400;
           throw error;
         }
-        sendEvent(event);
+        const normalized = normalizeEvent(event);
+        sendEvent(normalized);
         res.writeHead(202, { 'Content-Type': 'application/json' });
         res.end('{"ok":true}');
       }).catch(error => {
@@ -85,7 +87,7 @@ function startServer() {
 }
 
 function createWindow() {
-  windowRef = new BrowserWindow({ width: 1440, height: 920, minWidth: 980, minHeight: 680, backgroundColor: '#080b12', title: 'Experiment Lens', webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  windowRef = new BrowserWindow({ width: 1440, height: 920, minWidth: 980, minHeight: 680, backgroundColor: '#080b12', title: 'Viziverse', webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
   const dashboardUrl = pathToFileURL(path.join(__dirname, 'index.html')).href;
   windowRef.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   windowRef.webContents.on('will-navigate', (event, url) => {
