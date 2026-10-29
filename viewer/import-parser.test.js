@@ -33,3 +33,12 @@ test('parses escaped quotes and rejects malformed or unhelpful files', () => {
   assert.throws(() => parseCsv('a,b\n1,"unfinished'), /unclosed/);
   assert.throws(() => parseImportedText('hello world', 'bad.txt'), /Could not recognize|No usable/);
 });
+
+
+test('event-oriented CSV header matching is case-insensitive', () => {
+  const events = parseImportedText('Type,TS,Run_ID,Data\nmetric,10,r1,"{""name"":""loss"",""value"":0.2}"', 'events.csv', 100);
+  assert.equal(events[0].type, 'metric');
+  assert.equal(events[0].run_id, 'r1');
+  assert.deepEqual(events[0].data, { name: 'loss', value: 0.2 });
+  assert.equal(events[0].schema_version, '1');
+});

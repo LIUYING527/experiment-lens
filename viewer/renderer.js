@@ -346,7 +346,7 @@ $('importFile').addEventListener('change', async event => {
     const imported = importParser.parseImportedText(await file.text(), file.name);
     for (const item of imported) ingest(item, false);
     rebuildRuns(); render();
-    $('importStatus').textContent = 'Imported ' + imported.length.toLocaleString() + ' events from ' + file.name + '. Imported data is currently in this viewer session; export JSON to keep a copy.';
+    $('importStatus').textContent = 'Read ' + imported.length.toLocaleString() + ' events from ' + file.name + (imported.length > MAX_EVENTS ? '; the live viewer retains the latest ' + MAX_EVENTS.toLocaleString() : '') + '. Imported data is session-only; export JSON to keep a copy.';
   } catch (error) { $('importStatus').textContent = 'Import failed: ' + error.message; }
 });
 $('exportEvents').addEventListener('click',exportHistory);

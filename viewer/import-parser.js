@@ -47,7 +47,7 @@
   function parseImportedText(text, filename = 'imported-log', now = Date.now() / 1000) {
     const source = String(text || '').replace(/^\uFEFF/, '').trim();
     if (!source) throw new Error('The selected file is empty');
-    const base = { run_id: 'import-' + String(filename).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80), run_name: filename, source: { name: 'file-import', filename } };
+    const base = { schema_version: '1', run_id: 'import-' + String(filename).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80), run_name: filename, source: { name: 'file-import', filename } };
     const normalize = (e, i) => ({ ...base, ...e, event_id: e.event_id || e.id || ('import-' + i), ts: asNumber(e.ts) ?? now + i / 1000, data: e.data && typeof e.data === 'object' && !Array.isArray(e.data) ? e.data : {} });
 
     try {
@@ -77,13 +77,15 @@
     const find = (...names) => names.map(name => lower.indexOf(name)).find(i => i >= 0) ?? -1;
     const typeCol = find('type', 'event_type');
     if (typeCol >= 0) {
+      const get = (row, names) => { const col = names.map(name => lower.indexOf(name)).find(index => index >= 0); return col === undefined ? undefined : row[headers[col]]; };
       return objects.map((row, i) => {
         const data = {};
         for (const [key, value] of Object.entries(row)) {
           if (!['type', 'event_type', 'ts', 'timestamp', 'time', 'run_id', 'run_name', 'event_id', 'id', 'step'].includes(key.toLowerCase())) data[key] = value;
         }
-        if (typeof row.data === 'string' && row.data.trim()) { try { Object.assign(data, JSON.parse(row.data)); } catch (_) {} }
-        return { ...base, event_id: row.event_id || row.id || ('import-' + i), type: row.type || row.event_type, ts: asNumber(row.ts || row.timestamp || row.time) ?? now + i / 1000, run_id: row.run_id || base.run_id, run_name: row.run_name || filename, step: asNumber(row.step) ?? undefined, data };
+        const rawData = get(row, ['data']);
+        if (typeof rawData === 'string' && rawData.trim()) { try { Object.assign(data, JSON.parse(rawData)); } catch (_) {} }
+        return { ...base, event_id: get(row, ['event_id', 'id']) || ('import-' + i), type: get(row, ['type', 'event_type']), ts: asNumber(get(row, ['ts', 'timestamp', 'time'])) ?? now + i / 1000, run_id: get(row, ['run_id']) || base.run_id, run_name: get(row, ['run_name']) || filename, step: asNumber(get(row, ['step'])) ?? undefined, data };
       });
     }
 
