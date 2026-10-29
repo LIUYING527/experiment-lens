@@ -31,7 +31,8 @@ The goal is to make the common path effortless while keeping domain-specific vie
 - Windows-first Electron desktop viewer with a local HTTP/WebSocket event service.
 - Lightweight Python and JavaScript SDKs for runs, events, metrics, actions, goals, and trajectories.
 - Live numeric training/evaluation curves grouped by metric and split.
-- CSV, JSONL, NDJSON, and TensorBoard scalar CSV log import, including incremental watch mode.
+- CSV, JSONL, NDJSON, and TensorBoard scalar CSV log import through the Python CLI, including incremental watch mode.
+- In-app import of event JSON/JSONL/NDJSON and numeric metric CSVs; imported data is session-only until explicitly exported.
 - Run history, event filtering, read-only replay, two-run comparison, and JSON export.
 - Image previews and a basic 2D trajectory view.
 - Optional metadata-only Claude Code hook integration.
@@ -125,7 +126,9 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PROTOCOL.md](docs/PROTOC
 
 - [x] Local event collection and live desktop viewer
 - [x] Python SDK and basic event schema
-- [x] Training metric visualization and log import
+- [x] Training metric visualization and CLI log import
+- [x] In-app import for event JSON/JSONL and common metric CSV formats
+- [x] Dependency-free JavaScript SDK
 - [x] Run history, replay, comparison, and JSON export
 - [ ] Version and document a stable canonical event protocol
 - [ ] Separate ingestion, normalization, semantic state, and rendering contracts

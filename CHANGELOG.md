@@ -4,6 +4,11 @@ Notable changes to Viziverse are recorded here. The GitHub repository and Python
 
 ## Unreleased
 
+- Added in-app file import for JSON event arrays, JSONL/NDJSON, event-oriented CSV, TensorBoard scalar CSV, and wide numeric metric CSVs. Imported events are session-only until exported.
+- Added a dependency-free JavaScript SDK and protocol conformance tests.
+- Documented the initial version-1 event envelope and normalized legacy events at ingestion.
+- Batch live UI refreshes with requestAnimationFrame to avoid re-rendering the full dashboard for every event in a burst.
+
 - Repositioned the product from an experiment-focused observer to Viziverse: a local-first visualization workspace for agent workflows, training/evaluation, robotics, pipelines, and custom processes.
 - Added a product vision and target architecture that distinguish implemented functionality from future extensibility work.
 - Documented a versioned canonical event protocol, semantic/view registries, scene composition, and 1.0 acceptance gates as the direction for future implementation.

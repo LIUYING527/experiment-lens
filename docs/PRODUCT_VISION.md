@@ -30,7 +30,7 @@ These scenarios overlap, but do not share identical visual needs. The core shoul
 
 ## Product promise
 
-- **Connect quickly:** SDKs and importers make the first useful view possible with minimal setup.
+- **Connect quickly:** Python and JavaScript SDKs, in-app file import, and CLI importers make the first useful view possible with minimal setup.
 - **Understand immediately:** new data streams produce a sensible default view and explain what is recognized.
 - **Stay smooth under load:** batch updates, downsample dense charts, and lazy-load large artifacts.
 - **Inspect deeply:** every summary connects to the underlying events or samples that produced it.

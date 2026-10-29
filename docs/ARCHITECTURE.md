@@ -146,7 +146,7 @@ The current viewer retains up to 3,000 events in memory. JSONL persistence is co
 
 The SDK helpers \`training_metric()\` and \`evaluation_metric()\` emit metric events with split, phase, epoch, and step metadata. The optional Hugging Face Trainer callback adapts numeric training logs and validation results without requiring Transformers at SDK import time. The dashboard plots numeric metric events and overlays recent runs.
 
-CSV, JSONL, NDJSON, and TensorBoard scalar CSV import is available through the Python log importer. Watch mode consumes newly appended complete rows and handles common truncation/rotation cases. It is not a universal parser for every logging format; source-specific adapters remain the intended extension point.
+CSV, JSONL, NDJSON, and TensorBoard scalar CSV import is available through the Python log importer. The desktop UI also imports event JSON/JSONL and common metric CSV shapes into the current session; this UI import is intentionally not persisted automatically. Watch mode consumes newly appended complete rows and handles common truncation/rotation cases. It is not a universal parser for every logging format; source-specific adapters remain the intended extension point.
 
 ## Security boundaries
 
