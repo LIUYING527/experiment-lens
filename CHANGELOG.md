@@ -1,25 +1,24 @@
 # Changelog
 
-Notable changes to Experiment Lens are recorded here.
+Notable changes to Viziverse are recorded here. The GitHub repository and Python package retain the legacy \`experiment-lens\` name during migration.
 
 ## Unreleased
+
+- Repositioned the product from an experiment-focused observer to Viziverse: a local-first visualization workspace for agent workflows, training/evaluation, robotics, pipelines, and custom processes.
+- Added a product vision and target architecture that distinguish implemented functionality from future extensibility work.
+- Documented a versioned canonical event protocol, semantic/view registries, scene composition, and 1.0 acceptance gates as the direction for future implementation.
+- Updated the desktop-facing product label and installer artifact naming to Viziverse while retaining the existing Electron app ID for upgrade compatibility.
+- Clarified that automatic visualization of arbitrary data is a goal, not a completed feature.
 
 - Added a dedicated Training & Evaluation panel with live numeric metric curves grouped by metric and split.
 - Added Python SDK helpers for training and evaluation metrics, plus a synthetic training demo.
 - Added a lightweight Hugging Face Trainer callback that forwards training logs, validation metrics, and run completion without requiring Transformers as an SDK dependency.
 - Overlay metric curves from recent runs to make experiment progress easier to compare.
-- Import existing CSV, JSONL, and NDJSON training logs, including TensorBoard scalar CSV exports and slash-style train/eval tags.
-- Add a `--metric-name` override for TensorBoard scalar CSVs that do not include a `Tag` column.
-- Make `--watch` consume only newly appended complete CSV/JSONL rows instead of rescanning the entire log on every poll.
-
-- Added CI and Windows installer status badges to the README.
-- Documented the current run history, replay, comparison, export, and persistence capabilities.
-- Added a first-run troubleshooting guide for the local service, SDK, port conflicts, and Claude Code hooks.
-- Added a security and privacy document covering local networking, event metadata, persistence, and reporting vulnerabilities.
-- Updated the documented Node.js requirement to match the Windows installer build environment.
-- Added a byte-based 20 MiB request-body limit and clear HTTP errors for malformed or oversized event submissions.
-- Added unit tests for valid JSON, malformed JSON, and oversized request bodies.
-- Improved the port-conflict troubleshooting commands so they can be copied without editing a placeholder.
+- Import CSV, JSONL, and NDJSON training logs, including TensorBoard scalar CSV exports and slash-style train/eval tags.
+- Add a \`--metric-name\` override for TensorBoard scalar CSVs that do not include a \`Tag\` column.
+- Make \`--watch\` consume newly appended complete CSV/JSONL rows instead of rescanning the entire log on every poll.
+- Added CI and Windows installer status badges, first-run troubleshooting, and security/privacy documentation.
+- Added a byte-based 20 MiB request-body limit and tests for valid JSON, malformed JSON, and oversized submissions.
 
 ## 0.1.0
 

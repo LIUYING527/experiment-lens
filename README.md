@@ -1,47 +1,49 @@
-# Experiment Lens
+# Viziverse
 
-**A local-first desktop observability workspace for agent workflows, model training, and evaluation.**
+**Visualize anything that happens in your software — live, locally, and in one place.**
 
-Experiment Lens is a Windows-first, local-first desktop viewer inspired by always-available agent observation tools. It combines live agent activity with training curves and validation metrics, so researchers can watch long-running experiments as they train and evaluate. Coding agents, robotics, reinforcement learning, fine-tuning jobs, and custom evaluation scripts can emit structured events through the same lightweight Python SDK.
+Viziverse is a local-first visualization workspace for processes that are difficult to understand from logs alone: AI agents, model training and evaluation, robotics, data pipelines, scripts, simulations, benchmarks, and custom applications.
+
+Instead of building a separate dashboard for every use case, Viziverse aims to provide one event protocol, a flexible collection layer, and scene-specific views that turn live activity into something people can inspect and understand.
+
+> **Current status:** early development. The existing desktop viewer and Python SDK are the foundation; the universal adapter and visualization-plugin architecture are the direction of travel, not features that are all complete today.
 
 [![CI](https://github.com/LIUYING527/experiment-lens/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LIUYING527/experiment-lens/actions/workflows/ci.yml)
 [![Windows installer](https://github.com/LIUYING527/experiment-lens/actions/workflows/windows-installer.yml/badge.svg?branch=main)](https://github.com/LIUYING527/experiment-lens/actions/workflows/windows-installer.yml)
 
-## What it does
+## The idea
 
-- Live event stream and run status
-- Live train/validation metric curves grouped by metric and split
-- Training and evaluation metrics indexed by epoch, step, or event time
-- Overlay curves from recent experiment runs for quick comparisons
-- Metrics, action events, tool activity, and errors
-- Image previews for live image events
-- Optional 2D trajectory points
-- Run History grouped by run ID, with text filtering
-- Replay controls for stepping or playing through recorded events
-- Side-by-side comparison of two runs
-- JSON export of the current event history
-- Local HTTP event endpoint and WebSocket stream
-- Persistent local event history (up to the latest 3,000 events)
+**One observation layer. Many kinds of work. The right view for each one.**
 
-## Architecture
+Viziverse is not intended to be another dashboard that only shows generic charts. Different processes need different visual forms:
 
-\`\`\`text
-Agent / Training Process / Existing Log
-       | Python SDK / CSV & JSONL importer
-       v
-Local Event Server (127.0.0.1:7337)
-       | WebSocket /stream
-       v
-Experiment Lens Desktop Viewer
-\`\`\`
+- **AI agents:** execution timeline, tool calls, errors, run replay, and multi-step state.
+- **Model training and evaluation:** loss and score curves, checkpoints, dataset splits, and run comparisons.
+- **Robotics and simulation:** camera frames, trajectories, spatial state, actions, and episode replay.
+- **Data pipelines:** stage graphs, throughput, queue depth, retries, and failed records.
+- **Scripts and applications:** logs, progress, structured events, resource metrics, and artifacts.
+- **Custom domains:** user-defined events, views, and adapters.
+
+The goal is to make the common path effortless while keeping domain-specific views possible through extensions.
+
+## What works today
+
+- Windows-first Electron desktop viewer with a local HTTP/WebSocket event service.
+- Lightweight Python SDK for runs, events, metrics, images, actions, goals, and trajectories.
+- Live numeric training/evaluation curves grouped by metric and split.
+- CSV, JSONL, NDJSON, and TensorBoard scalar CSV log import, including incremental watch mode.
+- Run history, event filtering, read-only replay, two-run comparison, and JSON export.
+- Image previews and a basic 2D trajectory view.
+- Optional metadata-only Claude Code hook integration.
+- Bounded local event history and local-networking protections.
+
+These are the current capabilities, not a claim that every scenario is already automatically detected or perfectly visualized.
 
 ## Quick start
 
-You need Node.js 22+ and Python 3.9+. The Windows installer workflow uses Node.js 22.
+Requirements: Node.js 22+ and Python 3.9+.
 
 ### 1. Start the desktop viewer
-
-From the repository root:
 
 \`\`\`powershell
 cd viewer
@@ -49,157 +51,82 @@ npm install
 npm start
 \`\`\`
 
-The viewer opens a desktop window and listens locally at \`http://127.0.0.1:7337\`. The server binds to loopback rather than a public network interface and rejects requests carrying non-local browser origins. The dashboard applies a restrictive Content Security Policy.
+The viewer opens a desktop window and listens on \`http://127.0.0.1:7337\`. The local service binds to loopback rather than a public network interface.
 
 ### 2. Install the Python SDK
 
-From the repository root, in a second terminal:
+From the repository root, in another terminal:
 
 \`\`\`powershell
 python -m pip install -e ./sdk/python
 \`\`\`
 
-### 3. Send demo events
+The distribution and import paths remain \`experiment-lens\` / \`experiment_lens\` for compatibility during the rebrand.
 
-For agent/navigation-style events:
+### 3. Run an example
 
 \`\`\`powershell
 python examples/vln_demo.py
-\`\`\`
-
-For training and validation curves:
-
-\`\`\`powershell
 python examples/training_demo.py
 \`\`\`
 
-The training demo emits **synthetic** train loss, validation loss, and validation accuracy. It does not train a real model. In the dashboard's Training & Evaluation panel, select \`loss\` to overlay training and validation curves, or select \`accuracy\` to inspect validation accuracy.
+The training demo emits synthetic metrics for visualization; it does not train a real model.
 
-### Import existing training logs (CSV / JSONL)
+## Architecture direction
 
-You can visualize logs from a training run without editing the training loop. Supported files are CSV, JSONL, and NDJSON. Wide CSV rows such as \`step,epoch,train_loss,eval_loss,eval_accuracy\` are detected automatically; long rows such as \`step,name,value,split\` are also supported. TensorBoard scalar CSV exports (\`Wall time,Step,Value\`, optionally with \`Tag\`) and case-insensitive column names are supported. Prefixes \`train_\`, \`eval_\`, \`validation_\`, \`val_\`, and \`test_\` (also slash-style tags such as \`train/loss\`) map metric names to their data split.
-
-Import a completed log:
-
-\`\`\`powershell
-python -m experiment_lens.log_importer .\\logs\\metrics.csv --run-name my-finetune
-
-For a TensorBoard scalar CSV without a `Tag` column, name the series explicitly:
-
-```powershell
-python -m experiment_lens.log_importer .\\logs\\loss.csv --metric-name loss --run-name my-finetune
-```
+\`\`\`text
+SDKs / framework adapters / log importers / custom event producers
+                            |
+                            v
+                 Canonical event protocol
+                            |
+                            v
+              Local collector + event store
+                            |
+                            v
+             Semantic state / session model
+                            |
+              +-------------+-------------+
+              |             |             |
+              v             v             v
+        Timeline view   Metric view   Spatial/artifact view
+              |             |             |
+              +------ extensible view plugins ------+
+                            |
+                            v
+                Local-first desktop workspace
 \`\`\`
 
-Follow a log while it grows (the importer polls for appended rows):
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 
-\`\`\`powershell
-python -m experiment_lens.log_importer .\\logs\\metrics.jsonl --run-name my-finetune --watch --interval 2
-\`\`\`
+## Design principles
 
-Keep the desktop viewer running while importing. The importer reads local files and forwards numeric metrics to the local viewer; it does not upload the source log. In watch mode, it incrementally reads newly appended complete rows rather than repeatedly loading the entire log, and resets its cursor if the file is truncated or rotated.
+1. **Local-first by default.** Data stays on the user's machine unless they explicitly configure an external destination.
+2. **One protocol, many adapters.** Framework-specific integration belongs at the edge; the core should not depend on one AI framework.
+3. **Views follow meaning.** Metrics, timelines, graphs, spatial data, images, and artifacts should not all be forced into one generic chart.
+4. **Progressive disclosure.** Start with a useful default view, then let users drill into details.
+5. **Live and replay share one data model.** A run should be inspectable while it happens and after it finishes.
+6. **Extensible, not infinitely magical.** Automatic views handle common schemas; unusual semantics use explicit adapters and plugins.
+7. **Privacy and bounded resource use.** Avoid silently capturing secrets or huge binary payloads; keep retention predictable.
 
-### Windows installer
+## Roadmap
 
-The Windows x64 NSIS installer is built by GitHub Actions. Open the [Windows installer workflow](https://github.com/LIUYING527/experiment-lens/actions/workflows/windows-installer.yml), select a successful run, and download the \`experiment-lens-windows-installer\` artifact. Workflow artifacts expire after 14 days, so they are for testing rather than permanent distribution. A versioned GitHub Release will be used for stable downloads after the 1.0 release gates are met.
+- [x] Local event collection and live desktop viewer
+- [x] Python SDK and basic event schema
+- [x] Training metric visualization and log import
+- [x] Run history, replay, comparison, and JSON export
+- [ ] Version and document a stable canonical event protocol
+- [ ] Separate ingestion, normalization, semantic state, and rendering contracts
+- [ ] Add pluggable view definitions and reusable scene templates
+- [ ] Add adapters for agent, ML, robotics, and pipeline workflows
+- [ ] Add schema discovery and a first-run suggested-view experience
+- [ ] Improve high-volume rendering, filtering, and time navigation
+- [ ] Release a polished 1.0 with tested installers and migration documentation
 
-## SDK example
+## Project name
 
-\`\`\`python
-from experiment_lens import Lens
-
-lens = Lens(run_name="my-agent-run")
-lens.training_metric("loss", 0.42, step=1200, epoch=3, learning_rate=0.0003)
-lens.evaluation_metric("accuracy", 0.91, epoch=3, split="validation")
-lens.action("tool_call", tool="search")
-lens.step(step=1, message="First step complete")
-lens.end_run(status="completed")
-\`\`\`
-
-The SDK is intentionally dependency-free and fails silently by default if the viewer is not running; pass \`fail_silently=False\` to surface connection errors.
-
-### Hugging Face Trainer integration
-
-For Hugging Face \`Trainer\` fine-tuning, the optional callback adapter forwards numeric training logs and evaluation metrics without adding a Transformers dependency to the Experiment Lens SDK:
-
-\`\`\`python
-from experiment_lens import Lens
-from experiment_lens.integrations import HuggingFaceTrainerCallback
-
-lens = Lens(run_name="my-finetune")
-trainer.add_callback(HuggingFaceTrainerCallback(lens))
-trainer.train()
-\`\`\`
-
-Training metrics such as \`loss\` and \`learning_rate\` appear as training series; \`eval_loss\` and \`eval_accuracy\` become validation series. Evaluation updates arrive when the Trainer runs evaluation, so configure its normal evaluation schedule (for example, by steps or epochs) in your training arguments. The callback is intentionally small and can be adapted to other training frameworks.
-
-## Claude Code integration (experimental)
-
-The first agent adapter observes Claude Code lifecycle and tool-use hooks. It sends metadata-only events to the local viewer: it does **not** forward prompt text, tool argument values, or tool output contents. It can record metadata such as tool names, input key names, working directory, hook type, and output size.
-
-1. Start Experiment Lens (\`cd viewer; npm start\`).
-2. Confirm Python is available in PowerShell (\`python --version\`).
-3. From the Experiment Lens repository root, install hooks into the project where you run Claude Code:
-
-   \`\`\`powershell
-   python .\\integrations\\claude-code\\install_hooks.py --project "D:\\path\\to\\your\\project"
-   \`\`\`
-
-   To remove only Experiment Lens hooks later:
-
-   \`\`\`powershell
-   python .\\integrations\\claude-code\\uninstall_hooks.py --project "D:\\path\\to\\your\\project"
-   \`\`\`
-
-   Replace the example path with your project directory. The installer updates that project's \`.claude/settings.local.json\`, preserves unrelated settings and hooks, creates a backup before editing an existing file, and avoids adding duplicate commands when rerun. It does not modify global Claude Code settings. Review the resulting settings before using it.
-
-4. Restart Claude Code in that project and use it normally. Hook events should appear in Experiment Lens under a session-based run. If events do not appear, check the Claude Code hook diagnostics and confirm the viewer is running.
-
-The adapter is experimental. Hook event names and payloads can vary by Claude Code version; its event mapping and install/uninstall behavior have unit tests, but the full integration should be validated against the installed Claude Code version.
-
-## Data handling and limitations
-
-- The viewer stores recent event history locally as JSON Lines in Electron's app-specific user-data directory and restores up to 3,000 events after restart.
-- Large image \`data_url\` payloads are intentionally omitted from persisted history and JSON exports to keep storage bounded. A live image preview can still update while the event is streaming.
-- Replay is read-only inspection of recorded events; it does not rerun the agent.
-- The trajectory view expects simple 2D point arrays such as \`[[x, y], ...]\`.
-- Training charts currently use numeric \`metric\` events; use \`Lens.training_metric(...)\` and \`Lens.evaluation_metric(...)\`, the Hugging Face callback, or the CSV/JSONL importer. Metrics update only when your process emits them, so periodic evaluation is supported without continuous per-step reporting.
-- The Claude Code adapter is metadata-only by design, but users should review the event schema and local settings before using it with sensitive projects.
-- A successful automated build does not replace a clean-machine Windows acceptance test. Installer startup, SDK-to-viewer behavior, and the installed Claude Code hook chain remain part of final release acceptance.
-
-## Development checks
-
-GitHub Actions runs Python SDK unit tests on Python 3.9, 3.11, and 3.12, Claude Code adapter tests, JavaScript syntax checks, and viewer logic tests.
-
-Run the SDK tests locally:
-
-\`\`\`powershell
-python -m pip install -e ./sdk/python
-cd sdk/python
-python -m unittest discover -s tests -v
-\`\`\`
-
-Run viewer checks from the \`viewer\` directory:
-
-\`\`\`powershell
-npm run check
-npm test
-\`\`\`
-
-Build a Windows x64 installer locally with \`npm run dist:win\` after \`npm install\`.
-
-## Project docs
-
-- [Architecture and event contract](docs/ARCHITECTURE.md)
-- [Troubleshooting guide](docs/TROUBLESHOOTING.md)
-- [Security and privacy](SECURITY.md)
-- [Changelog](CHANGELOG.md)
-- [1.0 release readiness checklist](docs/RELEASE_CHECKLIST.md)
+The product name is **Viziverse** and the tagline is **Visualize anything**. The GitHub repository and Python distribution still use their existing \`experiment-lens\` names while compatibility and repository settings are migrated deliberately.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please include reproduction steps and your environment details when reporting bugs.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Issues and pull requests are welcome. Useful contributions include real-world event samples, framework adapters, view plugins, accessibility improvements, and reproducible performance tests. See [CHANGELOG.md](CHANGELOG.md).

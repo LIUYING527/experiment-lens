@@ -1,7 +1,7 @@
 {
-  "name": "experiment-lens-viewer",
+  "name": "viziverse-desktop",
   "version": "0.1.0",
-  "description": "Local-first desktop viewer for agent workflows and experiments",
+  "description": "Local-first desktop visualization workspace for live processes, agents, training, and evaluation",
   "main": "main.js",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "build": {
     "appId": "io.experimentlens.desktop",
-    "productName": "Experiment Lens",
+    "productName": "Viziverse",
     "directories": {
       "output": "dist"
     },
@@ -43,7 +43,7 @@
           ]
         }
       ],
-      "artifactName": "Experiment-Lens-Setup-${version}-${arch}.${ext}"
+      "artifactName": "Viziverse-Setup-\${version}-\${arch}.\${ext}"
     },
     "nsis": {
       "oneClick": false,
