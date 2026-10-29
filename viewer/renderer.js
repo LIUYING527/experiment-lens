@@ -1,5 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
+const semanticRegistry = window.ViziverseSemantics;
+const viewRegistry = window.ViziverseViews;
 const MAX_EVENTS = 3000;
 let allEvents = [];
 let runs = new Map();
@@ -167,8 +169,12 @@ function render() {
   const visible = allEvents.filter(e => !query || JSON.stringify(e).toLowerCase().includes(query)).slice(-150).reverse();
   $('events').innerHTML = visible.map(e => {
     const dt = eventTime(e);
-    return '<div class="event"><span class="time">' + esc(dt ? dt.toLocaleTimeString() : 'time n/a') + '</span> <span class="kind">' + esc(e.type) + '</span> <span style="color:#aebbd1">' + esc(e.run_name || runId(e)) + '</span><br><span style="color:#7f8ba1">' + esc(JSON.stringify(e.data || {}).slice(0,240)) + '</span></div>';
+    const meaning = semanticRegistry.classifyEvent(e);
+    return '<div class="event"><span class="time">' + esc(dt ? dt.toLocaleTimeString() : 'time n/a') + '</span> <span class="kind">' + esc(e.type) + '</span> <span class="pill">' + esc(meaning.label) + '</span> <span style="color:#aebbd1">' + esc(e.run_name || runId(e)) + '</span><br><span style="color:#7f8ba1">' + esc(JSON.stringify(e.data || {}).slice(0,240)) + '</span></div>';
   }).join('') || '<div class="empty">No events match this filter.</div>';
+  const suggestedViews = viewRegistry.recommendViews(allEvents);
+  $('viewHints').textContent = suggestedViews.length ? suggestedViews.length + ' view types recognized' : 'Waiting for event types';
+  $('viewHints').title = suggestedViews.map(v => v.label).join(' · ') || 'Send events to discover useful views';
   const runQuery = ($('runSearch')?.value || '').toLowerCase().trim();
   const visibleRuns = [...runs.values()].reverse().filter(r => (r.name + ' ' + r.id + ' ' + r.status).toLowerCase().includes(runQuery));
   $('historyCount').textContent = runs.size + ' runs';
