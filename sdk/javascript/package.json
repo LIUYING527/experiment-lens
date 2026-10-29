@@ -1,0 +1,9 @@
+{
+  "name": "@viziverse/sdk",
+  "version": "0.1.0",
+  "description": "Dependency-free JavaScript SDK for the local-first Viziverse visualization workspace",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

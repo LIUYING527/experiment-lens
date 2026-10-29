@@ -29,7 +29,7 @@ The goal is to make the common path effortless while keeping domain-specific vie
 ## What works today
 
 - Windows-first Electron desktop viewer with a local HTTP/WebSocket event service.
-- Lightweight Python SDK for runs, events, metrics, images, actions, goals, and trajectories.
+- Lightweight Python and JavaScript SDKs for runs, events, metrics, actions, goals, and trajectories.
 - Live numeric training/evaluation curves grouped by metric and split.
 - CSV, JSONL, NDJSON, and TensorBoard scalar CSV log import, including incremental watch mode.
 - Run history, event filtering, read-only replay, two-run comparison, and JSON export.
@@ -72,6 +72,18 @@ python examples/training_demo.py
 
 The training demo emits synthetic metrics for visualization; it does not train a real model.
 
+### 4. Emit events from Node.js
+
+The dependency-free JavaScript SDK lives in **sdk/javascript/**:
+
+    const { Viziverse } = require('./sdk/javascript');
+    const viz = new Viziverse({ runName: 'my-pipeline' });
+    await viz.startRun({ workflow: 'etl' });
+    await viz.metric('records_processed', 1200, { split: 'pipeline' });
+    await viz.endRun();
+
+See [the event protocol](docs/PROTOCOL.md) for the shared envelope and event conventions.
+
 ## Architecture direction
 
 \`\`\`text
@@ -97,7 +109,7 @@ SDKs / framework adapters / log importers / custom event producers
                 Local-first desktop workspace
 \`\`\`
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PROTOCOL.md](docs/PROTOCOL.md), and [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 
 ## Design principles
 

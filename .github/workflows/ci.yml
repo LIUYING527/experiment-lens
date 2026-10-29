@@ -27,6 +27,16 @@ jobs:
       - name: Test Claude Code hook adapter
         run: python -m unittest discover -s integrations/claude-code -p 'test_*.py' -v
 
+  javascript-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Test JavaScript SDK
+        run: node --test sdk/javascript/test/*.test.js
+
   viewer:
     runs-on: ubuntu-latest
     steps:

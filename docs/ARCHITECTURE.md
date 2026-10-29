@@ -5,7 +5,7 @@ Viziverse is evolving from a single desktop observer into a general-purpose, loc
 ## Current implementation
 
 \`\`\`text
-Python SDK / Claude Code adapter / CSV-JSONL-TensorBoard importer
+Python + JavaScript SDKs / Claude Code adapter / CSV-JSONL-TensorBoard importer
           |
           | POST http://127.0.0.1:7337/events
           v
@@ -128,6 +128,10 @@ Not every producer must emit every concept. Adapters should preserve source data
 A view should declare supported semantic types and required fields, streaming/replay/comparison support, rendering cost limits, sampling strategy, empty/loading/error states, and interactions such as selection and filtering.
 
 Initial built-in views should cover timeline, metric series, event table, run comparison, image/artifact inspection, and 2D trajectory. Workflow templates can combine these views into agent, training/evaluation, and generic process workspaces.
+
+## SDKs
+
+The Python SDK and dependency-free JavaScript SDK both emit the version-1 event envelope. The JavaScript package is CommonJS and requires Node.js 18 or newer. Both SDKs are optional producers; the viewer does not require either to display events sent directly to its local API.
 
 ## Existing event API
 
