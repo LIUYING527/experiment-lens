@@ -17,6 +17,7 @@ class Viziverse {
     if (typeof type !== 'string' || !type.trim()) throw new TypeError('event type must be a non-empty string');
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new TypeError('event data must be an object');
     const event = {
+      ...metadata,
       schema_version: '1',
       event_id: randomUUID(),
       ts: Date.now() / 1000,
@@ -24,8 +25,7 @@ class Viziverse {
       run_name: this.runName,
       type: type.trim(),
       step: this._step,
-      data: { ...data },
-      ...metadata
+      data: { ...data }
     };
     try {
       if (this._transport) {

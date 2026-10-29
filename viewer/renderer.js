@@ -13,6 +13,16 @@ let replayEvents = [];
 let replayIndex = 0;
 let replayTimer = null;
 let connected = false;
+let renderScheduled = false;
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    rebuildRuns();
+    render();
+  });
+}
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -58,7 +68,7 @@ function ingest(e, shouldRender = true) {
   }
   if (e.type === 'image' && e.data?.data_url) lastImage = e.data;
   else if (e.type === 'image' && e.data?.payload_omitted) lastImage = { name: e.data.name || 'Image artifact', payload_omitted: true };
-  if (shouldRender) { rebuildRuns(); render(); }
+  if (shouldRender) scheduleRender();
 }
 const TRAINING_COLORS = ['#8b9cff', '#58d6a2', '#ffc879', '#ff8f9c', '#69c8f0', '#c5a3ff'];
 let selectedTrainingMetric = '';
@@ -302,7 +312,7 @@ function exportHistory() {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = 'experiment-lens-history-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+  anchor.download = 'viziverse-history-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
@@ -321,7 +331,7 @@ function connect() {
         data.events.forEach(e=>ingest(e,false)); rebuildRuns(); render();
         if(selectedRunId && runs.has(selectedRunId)) selectRun(selectedRunId);
       } else if(data.kind==='event') { ingest(data.event); }
-    } catch(err) { console.error('Experiment Lens could not process an event:',err); }
+    } catch(err) { console.error('Viziverse could not process an event:',err); }
   };
 }
 $('eventSearch').addEventListener('input',render);

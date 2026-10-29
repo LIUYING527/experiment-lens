@@ -43,3 +43,14 @@ test('validates event input and propagates errors when failSilently is disabled'
   await assert.rejects(viz.emit('custom', []), /must be an object/);
   await assert.rejects(viz.emit('custom', {}), /offline/);
 });
+
+
+test('extra metadata cannot overwrite protocol envelope fields', async () => {
+  const events = [];
+  const viz = new Viziverse({ runId: 'stable-run', transport: event => events.push(event) });
+  await viz.emit('custom', { safe: true }, { type: 'overridden', run_id: 'wrong', schema_version: '99', data: { unsafe: true } });
+  assert.equal(events[0].type, 'custom');
+  assert.equal(events[0].run_id, 'stable-run');
+  assert.equal(events[0].schema_version, '1');
+  assert.deepEqual(events[0].data, { safe: true });
+});
