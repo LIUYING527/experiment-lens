@@ -6,8 +6,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js && node --check analytics.js && node --check request-body.js && node --check event-schema.js && node --check semantic-registry.js && node --check view-registry.js",
-    "test": "node --test event-store.test.js security.test.js analytics.test.js request-body.test.js event-schema.test.js semantic-registry.test.js view-registry.test.js",
+    "check": "node --check main.js && node --check event-store.js && node --check renderer.js && node --check security.js && node --check analytics.js && node --check request-body.js && node --check event-schema.js && node --check semantic-registry.js && node --check view-registry.js && node --check import-parser.js",
+    "test": "node --test event-store.test.js security.test.js analytics.test.js request-body.test.js event-schema.test.js semantic-registry.test.js view-registry.test.js import-parser.test.js",
     "dist:win": "electron-builder --win nsis --x64"
   },
   "devDependencies": {
@@ -35,7 +35,8 @@
       "node_modules/ws/**/*",
       "semantic-registry.js",
       "view-registry.js",
-      "event-schema.js"
+      "event-schema.js",
+      "import-parser.js"
     ],
     "win": {
       "target": [

@@ -2,6 +2,7 @@
 const $ = id => document.getElementById(id);
 const semanticRegistry = window.ViziverseSemantics;
 const viewRegistry = window.ViziverseViews;
+const importParser = window.ViziverseImportParser;
 const MAX_EVENTS = 3000;
 let allEvents = [];
 let runs = new Map();
@@ -335,6 +336,19 @@ function connect() {
   };
 }
 $('eventSearch').addEventListener('input',render);
+$('importEvents').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async event => {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) { $('importStatus').textContent = 'Import failed: files are limited to 20 MiB.'; return; }
+  try {
+    const imported = importParser.parseImportedText(await file.text(), file.name);
+    for (const item of imported) ingest(item, false);
+    rebuildRuns(); render();
+    $('importStatus').textContent = 'Imported ' + imported.length.toLocaleString() + ' events from ' + file.name + '. Imported data is currently in this viewer session; export JSON to keep a copy.';
+  } catch (error) { $('importStatus').textContent = 'Import failed: ' + error.message; }
+});
 $('exportEvents').addEventListener('click',exportHistory);
 $('compareRuns').addEventListener('click',compareSelectedRuns);
 $('runSearch').addEventListener('input',render);
