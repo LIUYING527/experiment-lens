@@ -4,6 +4,8 @@ Notable changes to Viziverse are recorded here. The GitHub repository and Python
 
 ## Unreleased
 
+- Fixed a case-insensitive event-CSV import edge case where the raw Data column could remain alongside its parsed object.
+
 - Added in-app file import for JSON event arrays, JSONL/NDJSON, event-oriented CSV, TensorBoard scalar CSV, and wide numeric metric CSVs. Imported events are session-only until exported.
 - Added a dependency-free JavaScript SDK and protocol conformance tests.
 - Documented the initial version-1 event envelope and normalized legacy events at ingestion.

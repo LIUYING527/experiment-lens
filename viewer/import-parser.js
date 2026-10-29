@@ -81,7 +81,7 @@
       return objects.map((row, i) => {
         const data = {};
         for (const [key, value] of Object.entries(row)) {
-          if (!['type', 'event_type', 'ts', 'timestamp', 'time', 'run_id', 'run_name', 'event_id', 'id', 'step'].includes(key.toLowerCase())) data[key] = value;
+          if (!['type', 'event_type', 'ts', 'timestamp', 'time', 'run_id', 'run_name', 'event_id', 'id', 'step', 'data'].includes(key.toLowerCase())) data[key] = value;
         }
         const rawData = get(row, ['data']);
         if (typeof rawData === 'string' && rawData.trim()) { try { Object.assign(data, JSON.parse(rawData)); } catch (_) {} }
