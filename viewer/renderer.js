@@ -337,19 +337,87 @@ function connect() {
 }
 $('eventSearch').addEventListener('input',render);
 $('importEvents').addEventListener('click', () => $('importFile').click());
+async function handleImportFile(file) {
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) { $('importStatus').textContent = '导入失败：单个文件最大 20 MiB。'; showToast('文件过大，请选择小于 20 MiB 的日志文件。'); return; }
+  try {
+    const imported = importParser.parseImportedText(await file.text(), file.name);
+    if (!imported.length) throw new Error('文件中没有识别到可用事件或数值指标');
+    for (const item of imported) ingest(item, false);
+    rebuildRuns(); render();
+    $('importStatus').textContent = '已从 ' + file.name + ' 读取 ' + imported.length.toLocaleString() + ' 条事件' + (imported.length > MAX_EVENTS ? '；窗口最多保留最近 ' + MAX_EVENTS.toLocaleString() + ' 条' : '') + '。导入内容仅保存在当前会话；如需留存，请点击 Export JSON。';
+    showToast('导入成功：' + imported.length.toLocaleString() + ' 条事件');
+  } catch (error) {
+    $('importStatus').textContent = '导入失败：' + error.message;
+    showToast('无法识别该文件。请检查格式，或查看支持的 JSON / JSONL / CSV 示例。');
+  }
+}
 $('importFile').addEventListener('change', async event => {
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
-  if (!file) return;
-  if (file.size > 20 * 1024 * 1024) { $('importStatus').textContent = 'Import failed: files are limited to 20 MiB.'; return; }
-  try {
-    const imported = importParser.parseImportedText(await file.text(), file.name);
-    for (const item of imported) ingest(item, false);
-    rebuildRuns(); render();
-    $('importStatus').textContent = 'Read ' + imported.length.toLocaleString() + ' events from ' + file.name + (imported.length > MAX_EVENTS ? '; the live viewer retains the latest ' + MAX_EVENTS.toLocaleString() : '') + '. Imported data is session-only; export JSON to keep a copy.';
-  } catch (error) { $('importStatus').textContent = 'Import failed: ' + error.message; }
+  await handleImportFile(file);
 });
 $('exportEvents').addEventListener('click',exportHistory);
+
+function showToast(message) {
+  const toast = $('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.hidden = false;
+  if (toast._hideTimer) clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => { toast.hidden = true; }, 3200);
+}
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+    else {
+      const field = document.createElement('textarea');
+      field.value = text; field.style.position = 'fixed'; field.style.opacity = '0';
+      document.body.appendChild(field); field.select();
+      const ok = document.execCommand('copy'); field.remove();
+      if (!ok) throw new Error('clipboard unavailable');
+    }
+    showToast('已复制命令，可以粘贴到终端运行。');
+  } catch (_) {
+    showToast('自动复制不可用，请从页面中的命令框手动复制。');
+  }
+}
+document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copyText(button.getAttribute('data-copy'))));
+const quickImport = $('quickImport');
+if (quickImport) quickImport.addEventListener('click', () => $('importFile').click());
+const helpButton = $('showConnectionHelp');
+if (helpButton) helpButton.addEventListener('click', () => {
+  const help = $('connectionHelp');
+  help.hidden = !help.hidden;
+  helpButton.textContent = help.hidden ? '查看接入方式' : '收起接入方式';
+});
+(function enableDropImport() {
+  const overlay = $('dropOverlay');
+  if (!overlay) return;
+  let dragDepth = 0;
+  window.addEventListener('dragenter', event => {
+    if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes('Files')) return;
+    event.preventDefault(); dragDepth++;
+    overlay.classList.add('visible'); overlay.setAttribute('aria-hidden', 'false');
+  });
+  window.addEventListener('dragover', event => {
+    if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files')) event.preventDefault();
+  });
+  window.addEventListener('dragleave', event => {
+    if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes('Files')) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) { overlay.classList.remove('visible'); overlay.setAttribute('aria-hidden', 'true'); }
+  });
+  window.addEventListener('drop', async event => {
+    if (!event.dataTransfer || !event.dataTransfer.files || !event.dataTransfer.files.length) return;
+    event.preventDefault(); dragDepth = 0;
+    overlay.classList.remove('visible'); overlay.setAttribute('aria-hidden', 'true');
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length > 1) showToast('一次先导入一个文件，避免不同日志混在一起。');
+    await handleImportFile(files[0]);
+  });
+})();
+
 $('compareRuns').addEventListener('click',compareSelectedRuns);
 $('runSearch').addEventListener('input',render);
 $('replayPrev').addEventListener('click',()=>stepReplay(-1));
